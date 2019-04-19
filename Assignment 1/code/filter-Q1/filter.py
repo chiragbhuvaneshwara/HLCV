@@ -25,7 +25,7 @@ plt.plot(x, gx, '.-')
 plt.show()
 
 
-## function gaussianfilter (Question 1.b)
+# function gaussianfilter (Question 1.b)
 img = rgb2gray(np.array(Image.open('graf.png')))
 smooth_img = gauss_module.gaussianfilter(img, sigma)
 

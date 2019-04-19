@@ -10,7 +10,33 @@ def normalized_hist(img_gray, num_bins):
     assert len(img_gray.shape) == 2, 'image dimension mismatch'
     assert img_gray.dtype == 'float', 'incorrect image type'
 
-    # your code here
+    hists =[]
+
+    # print(img_gray.shape)
+    img_gray = img_gray.flatten()
+    sizeOfEachBin = 255/num_bins
+    start = 0.0
+    end = float(sizeOfEachBin)
+    bins = [start]
+
+    while end <= 255:
+        
+      count = 0
+      for grayVal in img_gray:
+        if grayVal <= end and grayVal >= start:
+          count += 1 
+      hists.append(count)
+      bins.append(end)
+      start += sizeOfEachBin
+      end += sizeOfEachBin
+      
+
+    hists = np.array(hists)
+    total = hists.sum()
+    hists = hists / total
+
+    bins = np.array(bins)
+
     return hists, bins
 
 #  compute joint histogram for each color channel in the image, histogram should be normalized so that sum of all values equals 1

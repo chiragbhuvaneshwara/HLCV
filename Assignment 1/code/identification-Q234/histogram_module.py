@@ -1,5 +1,10 @@
 import numpy as np
 from numpy import histogram as hist
+import math
+import sys
+sys.path.insert(0, '../filter-Q1')
+
+import gauss_module
 
 #  compute histogram of image intensities, histogram should be normalized so that sum of all values equals 1
 #  assume that image intensity varies between 0 and 255
@@ -39,6 +44,7 @@ def normalized_hist(img_gray, num_bins):
 
     return hists, bins
 
+
 #  compute joint histogram for each color channel in the image, histogram should be normalized so that sum of all values equals 1
 #  assume that values in each channel vary between 0 and 255
 #
@@ -53,15 +59,21 @@ def rgb_hist(img_color, num_bins):
     
     # execute the loop for each pixel in the image 
     for i in range(img_color.shape[0]):
-        for i in range(img_color.shape[1]):
+        for j in range(img_color.shape[1]):
             # increment a histogram bin which corresponds to the value of pixel i,j; h(R,G,B)
-            # ...
-            pass
+            sizeOfEachBin = 256/num_bins
+            R = math.floor(img_color[i,j,0]/sizeOfEachBin) 
+            G = math.floor(img_color[i,j,1]/sizeOfEachBin) 
+            B = math.floor(img_color[i,j,2]/sizeOfEachBin) 
+            hists[R,G,B] += 1
 
     # normalize the histogram such that its integral (sum) is equal 1
     # your code here
 
     hists = hists.reshape(hists.size)
+    total = hists.sum()
+    hists = hists / total
+
     return hists
 
 #  compute joint histogram for r/g values
@@ -77,8 +89,28 @@ def rg_hist(img_color, num_bins):
   
     # define a 2D histogram  with "num_bins^2" number of entries
     hists = np.zeros((num_bins, num_bins))
+    t = 1/num_bins
     
     # your code here
+    for i in range(img_color.shape[0]):
+      for j in range(img_color.shape[1]):
+        denom = img_color[i,j,0]+img_color[i,j,1]+img_color[i,j,2]
+        r = img_color[i,j,0]/denom
+        g = img_color[i,j,1]/denom
+
+        r = math.floor(r/t)
+        g = math.floor(g/t)
+
+        if r > num_bins:
+          r = num_bins
+        if g > num_bins:
+          g = num_bins
+        
+        hists[r,g] += 1
+
+    hists = hists/(img_color.shape[0]*img_color.shape[1])
+
+
 
     hists = hists.reshape(hists.size)
     return hists
@@ -97,17 +129,28 @@ def dxdy_hist(img_gray, num_bins):
     assert img_gray.dtype == 'float', 'incorrect image type'
 
     # compute the first derivatives
-    # ...
+    sigma = 7.0
+    img_dx, img_dy = gauss_module.gaussderiv(img_gray, sigma)
 
     # quantize derivatives to "num_bins" number of values
-    # ...
+    min_a = -32
+    max_a = 32
+
+    t = (max_a - min_a + 1)/num_bins
 
     # define a 2D histogram  with "num_bins^2" number of entries
     hists = np.zeros((num_bins, num_bins))
 
     # ...
+    for i in range(img_gray.shape[0]):
+      for j in range(img_gray.shape[1]):
+        x = math.floor((img_dx[i,j]+32)/t)
+        y = math.floor((img_dy[i,j]+32)/t)
+        hists[x,y] += 1
     
     hists = hists.reshape(hists.size)
+    hists = hists / (img_gray.shape[0]*img_gray.shape[1])
+
     return hists
 
 def is_grayvalue_hist(hist_name):

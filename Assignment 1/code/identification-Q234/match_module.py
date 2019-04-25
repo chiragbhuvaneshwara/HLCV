@@ -1,9 +1,14 @@
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
+#from skimage.color import rgb2gray
+#import matplotlib.image as mpimg
+#import heapq as hp
 
 import histogram_module
 import dist_module
+from dist_module import *
+from histogram_module import *
 
 def rgb2gray(rgb):
 
@@ -32,8 +37,16 @@ def find_best_match(model_images, query_images, dist_type, hist_type, num_bins):
   query_hists = compute_histograms(query_images, hist_type, hist_isgray, num_bins)
 
   D = np.zeros((len(model_images), len(query_images)))
-
+  
+  best_match = []
   # your code here
+  for i in range(len(model_images)):
+    for j in range(len(query_images)):
+      D[i,j] = get_dist_by_name(model_hists[i], query_hists[j], dist_type)
+
+  for i in range(len(query_images)):
+    best_match.append(np.argmin(D[:,i]))
+  best_match = np.array(best_match)
 
   return best_match, D
 
@@ -43,6 +56,13 @@ def compute_histograms(image_list, hist_type, hist_isgray, num_bins):
 
   # compute hisgoram for each image and add it at the bottom of image_hist
   # your code here
+  for i in range(len(image_list)):
+    #img_color = imread(char(string(image_list(i))))
+    img_color = np.array(Image.open(image_list[i]))
+    #img_gray = rgb2gray(img_color.astype('double'))
+    #img = Image.open(image_list[i]).convert('LA')
+    image_hist.append(get_hist_by_name(img_color.astype('double'),num_bins,hist_type))
+
 
   return image_hist
 
@@ -56,10 +76,26 @@ def compute_histograms(image_list, hist_type, hist_isgray, num_bins):
 def show_neighbors(model_images, query_images, dist_type, hist_type, num_bins):
 
   plt.figure()
-
   num_nearest = 5  # show the top-5 neighbors
 
   # your code here
+  [best_match, D] = find_best_match(model_images, query_images, dist_type, hist_type, num_bins)
 
+  for i in range(len(query_images)):
+    idx = np.argsort(D[:,i])
+    idx = idx[:num_nearest]
+    plt.subplot(1,6,1) 
+    plt.imshow(np.array(Image.open(query_images[i])), vmin=0, vmax=255) 
+    plt.title('Query Image')
+    for j in range(len(idx)):   
+      plt.subplot(1,6,j+2) 
+      plt.imshow(np.array(Image.open(model_images[idx[j]])), vmin=0, vmax=255)
+    plt.title('Matched Image')
+    plt.show()
+
+
+    
+
+ 
 
 

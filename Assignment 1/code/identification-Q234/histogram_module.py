@@ -89,7 +89,7 @@ def rg_hist(img_color, num_bins):
   
     # define a 2D histogram  with "num_bins^2" number of entries
     hists = np.zeros((num_bins, num_bins))
-    t = 1/num_bins
+    t = num_bins
     
     # your code here
     for i in range(img_color.shape[0]):

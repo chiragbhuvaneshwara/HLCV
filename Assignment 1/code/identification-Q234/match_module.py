@@ -91,11 +91,11 @@ def show_neighbors(model_images, query_images, dist_type, hist_type, num_bins):
     idx = idx[:num_nearest]
     plt.subplot(1,6,1) 
     plt.imshow(np.array(Image.open(query_images[i])), vmin=0, vmax=255) 
-    plt.title('Query Image: 1')
+    plt.title('Query Image')
     for j in range(len(idx)):   
       plt.subplot(1,6,j+2) 
       plt.imshow(np.array(Image.open(model_images[idx[j]])), vmin=0, vmax=255)
-    plt.title('Matched Images: 2-6')
+    plt.title('Matched Image')
     plt.show()
 
 

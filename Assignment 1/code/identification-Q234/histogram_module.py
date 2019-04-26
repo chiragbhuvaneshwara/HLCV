@@ -5,6 +5,12 @@ import sys
 sys.path.insert(0, '../filter-Q1')
 
 import gauss_module
+def rgb2gray(rgb):
+
+    r, g, b = rgb[:,:,0], rgb[:,:,1], rgb[:,:,2]
+    gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
+
+    return gray
 
 #  compute histogram of image intensities, histogram should be normalized so that sum of all values equals 1
 #  assume that image intensity varies between 0 and 255
@@ -12,10 +18,12 @@ import gauss_module
 #  img_gray - input image in grayscale format
 #  num_bins - number of bins in the histogram
 def normalized_hist(img_gray, num_bins):
+    #print("inside normalized")
     assert len(img_gray.shape) == 2, 'image dimension mismatch'
     assert img_gray.dtype == 'float', 'incorrect image type'
 
     hists =[]
+    
 
     # print(img_gray.shape)
     img_gray = img_gray.flatten()
@@ -41,8 +49,9 @@ def normalized_hist(img_gray, num_bins):
     hists = hists / total
 
     bins = np.array(bins)
+    #print(len(hists))
 
-    return hists, bins
+    return hists,bins
 
 
 #  compute joint histogram for each color channel in the image, histogram should be normalized so that sum of all values equals 1
@@ -89,7 +98,7 @@ def rg_hist(img_color, num_bins):
   
     # define a 2D histogram  with "num_bins^2" number of entries
     hists = np.zeros((num_bins, num_bins))
-    t = num_bins
+    t = 1/(num_bins -1)
     
     # your code here
     for i in range(img_color.shape[0]):
@@ -98,21 +107,25 @@ def rg_hist(img_color, num_bins):
         r = img_color[i,j,0]/denom
         g = img_color[i,j,1]/denom
 
-        r = math.floor(r/t)
-        g = math.floor(g/t)
+        r = int(r/t)
+        g = int(g/t)
 
         if r > num_bins:
           r = num_bins
+        elif r < 1:
+          r = 1
         if g > num_bins:
           g = num_bins
+        elif g < 1:
+          g = 1
         
         hists[r,g] += 1
 
-    hists = hists/(img_color.shape[0]*img_color.shape[1])
-
-
-
+   # hists = hists/(img_color.shape[0]*img_color.shape[1])
     hists = hists.reshape(hists.size)
+    total = hists.sum()
+    hists = hists / total
+    #hists = hists.reshape(hists.size)
     return hists
 
 
@@ -150,6 +163,8 @@ def dxdy_hist(img_gray, num_bins):
     
     hists = hists.reshape(hists.size)
     hists = hists / (img_gray.shape[0]*img_gray.shape[1])
+    total = hists.sum()
+    hists = hists / total
 
     return hists
 
@@ -164,7 +179,8 @@ def is_grayvalue_hist(hist_name):
 
 def get_hist_by_name(img1_gray, num_bins_gray, dist_name):
   if dist_name == 'grayvalue':
-    return normalized_hist(img1_gray, num_bins_gray)
+    hist, _ = normalized_hist(img1_gray, num_bins_gray)
+    return hist
   elif dist_name == 'rgb':
     return rgb_hist(img1_gray, num_bins_gray)
   elif dist_name == 'rg':

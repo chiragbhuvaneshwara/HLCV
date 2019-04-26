@@ -151,10 +151,16 @@ model_images = [x.strip() for x in model_images]
 with open('query.txt') as fp:
     query_images = fp.readlines()
 query_images = [x.strip() for x in query_images] 
-
-eval_dist_type = 'intersect';
-eval_hist_type = 'rgb';
-eval_num_bins = 30;
+#chi2
+#intersect
+#l2
+eval_dist_type = 'chi2'
+#grayvalue
+#rgb
+#rg
+#dxdy
+eval_hist_type = 'grayvalue'
+eval_num_bins = 30
 
 
 [best_match, D] = match_module.find_best_match(model_images, query_images, eval_dist_type, eval_hist_type, eval_num_bins)

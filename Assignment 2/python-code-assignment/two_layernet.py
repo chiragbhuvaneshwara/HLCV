@@ -76,15 +76,36 @@ class TwoLayerNet(object):
         N, D = X.shape
 
         # Compute the forward pass
-        scores = 0.
+        scores = 0
         #############################################################################
         # TODO: Perform the forward pass, computing the class probabilities for the #
         # input. Store the result in the scores variable, which should be an array  #
         # of shape (N, C).                                                          #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        
+        # for i in range(X.shape[0]):
+        #   # print(X.shape)
+        #   z2 = np.dot(W1.T,X[i]) + b1
+        #   print(z2.shape)
+        #   a2 = z2 * (z2>0) 
+        #   z3 = np.dot(W2.T,a2) + b2
+        #   print(z3.shape)
+        #   a3 = np.exp(z3 - np.max(z3)) / sum(np.exp(z3 - np.max(z3)))
+        #   scores.append(a3)
 
-        pass
+        b1 = b1.reshape(b1.shape[0], 1)
+        b2 = b2.reshape(b2.shape[0], 1)
+        # print(X.T.shape)
+        # print(W1.T.shape)
+        z2 = np.dot(W1.T,X.T) + b1
+        # print(z2.shape)
+        a2 = z2 * (z2>0) 
+        z3 = np.dot(W2.T,a2) + b2
+        # print(z3.shape)
+        a3 = np.exp(z3 - np.max(z3)) / sum(np.exp(z3 - np.max(z3)))
+        
+        scores = a3.T
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -102,8 +123,14 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         # Implement the loss for softmax output layer
-        pass
+        # m = y.shape[0]
+        logLikelihood = -np.log(scores[range(N),y])
 
+        crossEntLoss = (1/N)*np.sum(logLikelihood)
+        
+        regWeight = reg*(np.sum(W1**2) + np.sum(W2**2))
+        
+        loss += crossEntLoss + regWeight
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
         # Backward pass: compute gradients

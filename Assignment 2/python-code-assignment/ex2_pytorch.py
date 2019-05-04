@@ -43,7 +43,7 @@ norm_transform = transforms.Compose([transforms.ToTensor(),
 cifar_dataset = torchvision.datasets.CIFAR10(root='datasets/',
                                            train=True,
                                            transform=norm_transform,
-                                           download=False)
+                                           download=True)
 
 test_dataset = torchvision.datasets.CIFAR10(root='datasets/',
                                           train=False,
@@ -105,10 +105,12 @@ class MultiLayerPerceptron(nn.Module):
         # hidden_layers[-1] --> num_classes                                             #
         # Make use of linear and relu layers from the torch.nn module                   #
         #################################################################################
-        layes = []
+        layers = []
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-
+        self.fc1 = nn.Linear(input_size, hidden_layers[0])
+        layers.append(self.fc1)
+        self.fc2 = nn.Linear(hidden_layers[0], num_classes)
+        layers.append(self.fc2)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         self.layers = nn.Sequential(*layers)
 
@@ -120,7 +122,8 @@ class MultiLayerPerceptron(nn.Module):
         # nn.CrossEntropyLoss() already integrates the softmax and the log loss together#
         #################################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        x = nn.functional.relu(self.fc1(x))
+        out = nn.Softmax(self.fc2(x))
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return out
@@ -150,11 +153,14 @@ if train:
             # Use examples in https://pytorch.org/tutorials/beginner/pytorch_with_examples.html
             #################################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-
-
-
-
+            
+            # zero the parameter gradients
+            optimizer.zero_grad()
+            
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -177,8 +183,7 @@ if train:
                 # 2. Get the most confident predicted class        #
                 ####################################################
                 # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-
+                
 
                 # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
                 total += labels.size(0)
@@ -207,8 +212,8 @@ else:
     # Run the test code once you have your by setting train flag to false
     # and loading the best model
 
-    best_model = None # torch.load()
-    mode.load_state_dict(best_model)
+    best_model = torch.load()
+    model.load_state_dict(best_model)
     # Test the model
     # In test phase, we don't need to compute gradients (for memory efficiency)
     with torch.no_grad():
@@ -223,8 +228,8 @@ else:
             # 2. Get the most confident predicted class        #
             ####################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-
+            outputs = model(images)
+            _ , predicted = torch.max(outputs.data, 1)
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
             total += labels.size(0)

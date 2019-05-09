@@ -23,6 +23,7 @@ print('Using device: %s'%device)
 # Hyper-parameters
 #--------------------------------
 input_size = 32 * 32 * 3
+# hidden_size = [50, 40, 30, 25, 20]
 hidden_size = [50]
 num_classes = 10
 num_epochs = 10
@@ -33,6 +34,7 @@ reg=0.001
 num_training= 49000
 num_validation =1000
 train = True
+train = False
 
 #-------------------------------------------------
 # Load the CIFAR-10 dataset
@@ -43,7 +45,7 @@ norm_transform = transforms.Compose([transforms.ToTensor(),
 cifar_dataset = torchvision.datasets.CIFAR10(root='datasets/',
                                            train=True,
                                            transform=norm_transform,
-                                           download=True)
+                                           download=False)
 
 test_dataset = torchvision.datasets.CIFAR10(root='datasets/',
                                           train=False,
@@ -107,10 +109,25 @@ class MultiLayerPerceptron(nn.Module):
         #################################################################################
         layers = []
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        self.fc1 = nn.Linear(input_size, hidden_layers[0])
-        layers.append(self.fc1)
-        self.fc2 = nn.Linear(hidden_layers[0], num_classes)
-        layers.append(self.fc2)
+        layers.append(nn.Linear(input_size, hidden_layers[0]))
+        layers.append( nn.ReLU() )
+
+        for i in range(1, len(hidden_layers)):
+            
+            layers.append( nn.Linear(hidden_layers[i-1], hidden_layers[i]) )
+            layers.append( nn.ReLU() )
+        
+        layers.append( nn.Linear(hidden_layers[-1], num_classes) )
+        
+        # self.fc1 = nn.Linear(input_size, hidden_layers[0])
+        
+        # self.fc2 = nn.Linear(hidden_layers[0], num_classes)
+        
+        # # Define RELU activation and softmax output 
+        # self.relu = nn.ReLU()
+        # # self.softmax = nn.Softmax(dim=1)
+
+        # layers = [self.fc1, self.relu, self.fc2] #, self.softmax]
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         self.layers = nn.Sequential(*layers)
 
@@ -122,13 +139,27 @@ class MultiLayerPerceptron(nn.Module):
         # nn.CrossEntropyLoss() already integrates the softmax and the log loss together#
         #################################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        x = nn.functional.relu(self.fc1(x))
-        out = nn.Softmax(self.fc2(x))
+        
+        # x = self.fc1(x)
+        # x = self.relu(x)
+        # out = self.fc2(x)
+
+        # out = self.softmax(x)
+        
+        for i in range(len(self.layers)):
+            x = self.layers[i](x)
+
+        out = x
+        # x = self.layers[](x)
+        # x = self.relu(x)
+        # out = self.fc2(x)
+
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return out
 
 model = MultiLayerPerceptron(input_size, hidden_size, num_classes).to(device)
+print(model)
 if train:
     model.apply(weights_init)
 
@@ -156,8 +187,8 @@ if train:
             
             # zero the parameter gradients
             optimizer.zero_grad()
-            
-            outputs = model(images)
+
+            outputs = model(images.reshape(batch_size,-1))
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
@@ -183,8 +214,8 @@ if train:
                 # 2. Get the most confident predicted class        #
                 ####################################################
                 # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-                
-
+                predicted = model(images.reshape(batch_size,-1))
+                _ , predicted = torch.max(predicted, 1)
                 # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
@@ -212,7 +243,7 @@ else:
     # Run the test code once you have your by setting train flag to false
     # and loading the best model
 
-    best_model = torch.load()
+    best_model = torch.load('model.ckpt')
     model.load_state_dict(best_model)
     # Test the model
     # In test phase, we don't need to compute gradients (for memory efficiency)
@@ -228,8 +259,8 @@ else:
             # 2. Get the most confident predicted class        #
             ####################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-            outputs = model(images)
-            _ , predicted = torch.max(outputs.data, 1)
+            outputs = model(images.reshape(batch_size,-1))
+            _ , predicted = torch.max(outputs, 1)
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
             total += labels.size(0)

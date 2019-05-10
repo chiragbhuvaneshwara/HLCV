@@ -119,33 +119,33 @@ print(np.sum(np.abs(loss - correct_loss)))
 #     print('%s max relative error: %e' % (param_name, rel_error(param_grad_num, grads[param_name])))
 
 
-# #======================================================================================
-# # Q3: Train the network using gradient descent
-# #======================================================================================
+#======================================================================================
+# Q3: Train the network using gradient descent
+#======================================================================================
 
-# # To train the network we will use stochastic gradient
-# # descent (SGD). Look at the function `TwoLayerNet.train` and fill in the
-# # missing sections to implement the training procedure.  You will also have to
-# # implement `TwoLayerNet.predict`, as the training process periodically
-# # performs prediction to keep track of accuracy over time while the network
-# # trains.
-# # Once you have implemented the method, run the code below to train a
-# # two-layer network on toy data. You should achieve a training loss less than
-# # 0.02.
+# To train the network we will use stochastic gradient
+# descent (SGD). Look at the function `TwoLayerNet.train` and fill in the
+# missing sections to implement the training procedure.  You will also have to
+# implement `TwoLayerNet.predict`, as the training process periodically
+# performs prediction to keep track of accuracy over time while the network
+# trains.
+# Once you have implemented the method, run the code below to train a
+# two-layer network on toy data. You should achieve a training loss less than
+# 0.02.
 
-# net = init_toy_model()
-# stats = net.train(X, y, X, y,
-#             learning_rate=1e-1, reg=5e-6,
-#             num_iters=100, verbose=False)
+net = init_toy_model()
+stats = net.train(X, y, X, y,
+            learning_rate=1e-1, reg=5e-6,
+            num_iters=100, verbose=False)
 
-# print('Final training loss: ', stats['loss_history'][-1])
+print('Final training loss: ', stats['loss_history'][-1])
 
-# # plot the loss history
-# plt.plot(stats['loss_history'])
-# plt.xlabel('iteration')
-# plt.ylabel('training loss')
-# plt.title('Training Loss history')
-# plt.show()
+# plot the loss history
+plt.plot(stats['loss_history'])
+plt.xlabel('iteration')
+plt.ylabel('training loss')
+plt.title('Training Loss history')
+plt.show()
 
 
 # # # Load the data
@@ -249,6 +249,17 @@ print(np.sum(np.abs(loss - correct_loss)))
 # # dimensionality, or adding dropout, or adding features to the solver, etc.).
 
 # # **Explain your hyperparameter tuning process in the report.**
+
+# net = TwoLayerNet(input_size, hidden_size, num_classes)
+# # Train the network
+# stats = net.train(X_train, y_train, X_val, y_val,
+#             num_iters=1000, batch_size=200,
+#             learning_rate=1e-4, learning_rate_decay=0.95,
+#             reg=0.25, verbose=True)
+
+# # Predict on the validation set
+# val_acc = (net.predict(X_val) == y_val).mean()
+# print('Validation accuracy: ', val_acc)
 
 # best_net = None # store the best model into this
 

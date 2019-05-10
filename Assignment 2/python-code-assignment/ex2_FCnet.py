@@ -28,100 +28,100 @@ def show_net_weights(net):
 #-------------------------- * End of helper functions *--------------------------------
 
 
-#======================================================================================
-# Q1: Implementing forward pass and the loss functions
-#======================================================================================
-# We will use the class `TwoLayerNet` in the file `two_layernet.py` to
-# represent instances of our network.  The network parameters are stored in the
-# instance variable `self.params` where keys are string parameter names and
-# values are numpy arrays.  Below, we initialize toy data and a toy model that
-# we will use to develop your implementation.
-#--------------------------------------------------------------------------------------
-
-# Create a small net and some toy data to check your implementations.
-# Note that we set the random seed for repeatable experiments.
-
-input_size = 4
-hidden_size = 10
-num_classes = 3
-num_inputs = 5
-
-def init_toy_model():
-    np.random.seed(0)
-    return TwoLayerNet(input_size, hidden_size, num_classes, std=1e-1)
-
-def init_toy_data():
-    np.random.seed(1)
-    X = 10 * np.random.randn(num_inputs, input_size)
-    y = np.array([0, 1, 2, 2, 1])
-    return X, y
-
-net = init_toy_model()
-X, y = init_toy_data()
-
-
-# # Forward pass: compute scores Open the file `two_layernet.py` and look at the
-# method `TwoLayerNet.loss`. This function is very similar to the loss
-# functions you have written for the SVM and Softmax exercises: It takes the
-# data and weights and computes the class scores, the loss, and the gradients
-# on the parameters.
-#
-# Implement the first part of the forward pass which uses the weights and
-# biases to compute the scores for all inputs.
-
-scores = net.loss(X)
-print('Your scores:')
-print(scores)
-print()
-print('correct scores:')
-correct_scores = np.asarray([
- [0.36446210, 0.22911264, 0.40642526],
- [0.47590629, 0.17217039, 0.35192332],
- [0.43035767, 0.26164229, 0.30800004],
- [0.41583127, 0.29832280, 0.28584593],
- [0.36328815, 0.32279939, 0.31391246]])
-print(correct_scores)
-print()
-
-# The difference should be very small. We get < 1e-7
-print('Difference between your scores and correct scores:')
-print(np.sum(np.abs(scores - correct_scores)))
-
-
-# # Forward pass: compute loss In the same function, implement the second part
-# that computes the data and regularization loss.
-loss, _ = net.loss(X, y, reg=0.05)
-correct_loss = 1.30378789133
-
-# should be very small, we get < 1e-12
-print('Difference between your loss and correct loss:')
-print(np.sum(np.abs(loss - correct_loss)))
-
-
 # #======================================================================================
-# # Q2:Computing gradients using back propogation
+# # Q1: Implementing forward pass and the loss functions
 # #======================================================================================
-# Implement the rest of the function. This will compute the gradient of the
-# loss with respect to the variables `W1`, `b1`, `W2`, and `b2`. Now that you
-# (hopefully!) have a correctly implemented forward pass, you can debug your
-# backward pass using a numeric gradient check:
+# # We will use the class `TwoLayerNet` in the file `two_layernet.py` to
+# # represent instances of our network.  The network parameters are stored in the
+# # instance variable `self.params` where keys are string parameter names and
+# # values are numpy arrays.  Below, we initialize toy data and a toy model that
+# # we will use to develop your implementation.
+# #--------------------------------------------------------------------------------------
 
-# # Use numeric gradient checking to check your implementation of the backward
-# # pass.  If your implementation is correct, the difference between the numeric
-# # and analytic gradients should be less than 1e-8 for each of W1, W2, b1, and
-# # b2.
-loss, grads = net.loss(X, y, reg=0.05)
-print(grads['W1'].shape)
-print(grads['W2'].shape)
-# these should all be less than 1e-8 or so
-for param_name in grads:
-    f = lambda W: net.loss(X, y, reg=0.05)[0]
-    param_grad_num = eval_numerical_gradient(f, net.params[param_name], verbose=False)
-    # print("*****")
-    #print('%s max relative error:', param_name)
-    # print(param_grad_num.shape)
-    # print(grads[param_name].shape)
-    print('%s max relative error: %e' % (param_name, rel_error(param_grad_num, grads[param_name])))
+# # Create a small net and some toy data to check your implementations.
+# # Note that we set the random seed for repeatable experiments.
+
+# input_size = 4
+# hidden_size = 10
+# num_classes = 3
+# num_inputs = 5
+
+# def init_toy_model():
+#     np.random.seed(0)
+#     return TwoLayerNet(input_size, hidden_size, num_classes, std=1e-1)
+
+# def init_toy_data():
+#     np.random.seed(1)
+#     X = 10 * np.random.randn(num_inputs, input_size)
+#     y = np.array([0, 1, 2, 2, 1])
+#     return X, y
+
+# net = init_toy_model()
+# X, y = init_toy_data()
+
+
+# # # Forward pass: compute scores Open the file `two_layernet.py` and look at the
+# # method `TwoLayerNet.loss`. This function is very similar to the loss
+# # functions you have written for the SVM and Softmax exercises: It takes the
+# # data and weights and computes the class scores, the loss, and the gradients
+# # on the parameters.
+# #
+# # Implement the first part of the forward pass which uses the weights and
+# # biases to compute the scores for all inputs.
+
+# scores = net.loss(X)
+# print('Your scores:')
+# print(scores)
+# print()
+# print('correct scores:')
+# correct_scores = np.asarray([
+#  [0.36446210, 0.22911264, 0.40642526],
+#  [0.47590629, 0.17217039, 0.35192332],
+#  [0.43035767, 0.26164229, 0.30800004],
+#  [0.41583127, 0.29832280, 0.28584593],
+#  [0.36328815, 0.32279939, 0.31391246]])
+# print(correct_scores)
+# print()
+
+# # The difference should be very small. We get < 1e-7
+# print('Difference between your scores and correct scores:')
+# print(np.sum(np.abs(scores - correct_scores)))
+
+
+# # # Forward pass: compute loss In the same function, implement the second part
+# # that computes the data and regularization loss.
+# loss, _ = net.loss(X, y, reg=0.05)
+# correct_loss = 1.30378789133
+
+# # should be very small, we get < 1e-12
+# print('Difference between your loss and correct loss:')
+# print(np.sum(np.abs(loss - correct_loss)))
+
+
+# # #======================================================================================
+# # # Q2:Computing gradients using back propogation
+# # #======================================================================================
+# # Implement the rest of the function. This will compute the gradient of the
+# # loss with respect to the variables `W1`, `b1`, `W2`, and `b2`. Now that you
+# # (hopefully!) have a correctly implemented forward pass, you can debug your
+# # backward pass using a numeric gradient check:
+
+# # # Use numeric gradient checking to check your implementation of the backward
+# # # pass.  If your implementation is correct, the difference between the numeric
+# # # and analytic gradients should be less than 1e-8 for each of W1, W2, b1, and
+# # # b2.
+# loss, grads = net.loss(X, y, reg=0.05)
+# print(grads['W1'].shape)
+# print(grads['W2'].shape)
+# # these should all be less than 1e-8 or so
+# for param_name in grads:
+#     f = lambda W: net.loss(X, y, reg=0.05)[0]
+#     param_grad_num = eval_numerical_gradient(f, net.params[param_name], verbose=False)
+#     # print("*****")
+#     #print('%s max relative error:', param_name)
+#     # print(param_grad_num.shape)
+#     # print(grads[param_name].shape)
+#     print('%s max relative error: %e' % (param_name, rel_error(param_grad_num, grads[param_name])))
 
 
 #======================================================================================
@@ -138,74 +138,76 @@ for param_name in grads:
 # two-layer network on toy data. You should achieve a training loss less than
 # 0.02.
 
-net = init_toy_model()
-stats = net.train(X, y, X, y,
-            learning_rate=1e-1, reg=5e-6,
-            num_iters=100, verbose=False, batch_size=5)
+# net = init_toy_model()
+# stats = net.train(X, y, X, y,
+#             learning_rate=1e-1, reg=5e-6,
+#             num_iters=100, verbose=False, batch_size=5)
 
-print('Final training loss: ', stats['loss_history'][-1])
+# print('Final training loss: ', stats['loss_history'][-1])
 
-# plot the loss history
-plt.plot(stats['loss_history'])
-plt.xlabel('iteration')
-plt.ylabel('training loss')
-plt.title('Training Loss history')
-plt.show()
+# # plot the loss history
+# plt.plot(stats['loss_history'])
+# plt.xlabel('iteration')
+# plt.ylabel('training loss')
+# plt.title('Training Loss history')
+# plt.show()
 
 
-# # # Load the data
-# # Now that you have implemented a two-layer network that passes
-# # gradient checks and works on toy data, it's time to load up our favorite
-# # CIFAR-10 data so we can use it to train a classifier on a real dataset.
-# # Invoke the get_CIFAR10_data function to get our data.
+# # Load the data
+# Now that you have implemented a two-layer network that passes
+# gradient checks and works on toy data, it's time to load up our favorite
+# CIFAR-10 data so we can use it to train a classifier on a real dataset.
+# Invoke the get_CIFAR10_data function to get our data.
 
-# X_train, y_train, X_val, y_val, X_test, y_test = get_CIFAR10_data()
-# print('Train data shape: ', X_train.shape)
-# print('Train labels shape: ', y_train.shape)
-# print('Validation data shape: ', X_val.shape)
-# print('Validation labels shape: ', y_val.shape)
-# print('Test data shape: ', X_test.shape)
-# print('Test labels shape: ', y_test.shape)
+X_train, y_train, X_val, y_val, X_test, y_test = get_CIFAR10_data()
+print('Train data shape: ', X_train.shape)
+print('Train labels shape: ', y_train.shape)
+print('Validation data shape: ', X_val.shape)
+print('Validation labels shape: ', y_val.shape)
+print('Test data shape: ', X_test.shape)
+print('Test labels shape: ', y_test.shape)
 
-# # Visualize some images to get a feel for the data
+# Visualize some images to get a feel for the data
 # plt.imshow(visualize_grid(X_train[:100, :].reshape(100, 32,32, 3), padding=3).astype('uint8'))
 # plt.gca().axis('off')
 # plt.show()
 
-# # # Train a network
-# # To train our network we will use SGD. In addition, we will
-# # adjust the learning rate with an exponential learning rate schedule as
-# # optimization proceeds; after each epoch, we will reduce the learning rate by
-# # multiplying it by a decay rate.
+# # Train a network
+# To train our network we will use SGD. In addition, we will
+# adjust the learning rate with an exponential learning rate schedule as
+# optimization proceeds; after each epoch, we will reduce the learning rate by
+# multiplying it by a decay rate.
 
-# input_size = 32 * 32 * 3
-# hidden_size = 50
-# num_classes = 10
-# net = TwoLayerNet(input_size, hidden_size, num_classes)
-# # Train the network
-# stats = net.train(X_train, y_train, X_val, y_val,
-#             num_iters=1000, batch_size=200,
-#             learning_rate=1e-4, learning_rate_decay=0.95,
-#             reg=0.25, verbose=True)
+input_size = 32 * 32 * 3
+hidden_size = 50
+num_classes = 10
+net = TwoLayerNet(input_size, hidden_size, num_classes)
+# Train the network
+stats = net.train(X_train, y_train, X_val, y_val,
+            num_iters=1000, batch_size=200,
+            learning_rate=1e-4, learning_rate_decay=0.95,
+            reg=0.25, verbose=True)
 
-# # Predict on the validation set
-# val_acc = (net.predict(X_val) == y_val).mean()
-# print('Validation accuracy: ', val_acc)
+print(X_val.shape)
+# Predict on the validation set
+print(net.predict(X_val))
+val_acc = (net.predict(X_val) == y_val).mean()
+print('Validation accuracy: ', val_acc)
 
 
-# # # Debug the training
-# # With the default parameters we provided above, you should get a validation
-# # accuracy of about 0.29 on the validation set. This isn't very good.
-# #
-# # One strategy for getting insight into what's wrong is to plot the loss
-# # function and the accuracies on the training and validation sets during
-# # optimization.
-# #
-# # Another strategy is to visualize the weights that were learned in the first
-# # layer of the network. In most neural networks trained on visual data, the
-# # first layer weights typically show some visible structure when visualized.
+# # Debug the training
+# With the default parameters we provided above, you should get a validation
+# accuracy of about 0.29 on the validation set. This isn't very good.
+#
+# One strategy for getting insight into what's wrong is to plot the loss
+# function and the accuracies on the training and validation sets during
+# optimization.
+#
+# Another strategy is to visualize the weights that were learned in the first
+# layer of the network. In most neural networks trained on visual data, the
+# first layer weights typically show some visible structure when visualized.
 
-# # Plot the loss function and train / validation accuracies
+# Plot the loss function and train / validation accuracies
 # plt.subplot(2, 1, 1)
 # plt.plot(stats['loss_history'])
 # plt.title('Loss history')

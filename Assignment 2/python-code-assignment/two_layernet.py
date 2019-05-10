@@ -97,8 +97,8 @@ class TwoLayerNet(object):
         b1 = b1.reshape(b1.shape[0], 1)
         b2 = b2.reshape(b2.shape[0], 1)
         # print(X.T.shape)
-        print("W1",W1.T.shape)
-        print(W2.T.shape)
+        # print("W1",W1.T.shape)
+        # print(W2.T.shape)
         z2 = np.dot(W1.T,X.T) + b1
         #print(z2.shape)
         a2 = z2 * (z2>0) 

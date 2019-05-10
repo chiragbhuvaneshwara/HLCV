@@ -99,7 +99,7 @@ class TwoLayerNet(object):
         # print(X.T.shape)
         # print(W1.T.shape)
         z2 = np.dot(W1.T,X.T) + b1
-        # print(z2.shape)
+        #print(z2.shape)
         a2 = z2 * (z2>0) 
         z3 = np.dot(W2.T,a2) + b2
         # print(z3.shape)
@@ -141,8 +141,42 @@ class TwoLayerNet(object):
         # grads['W1'] should store the gradient on W1, and be a matrix of same size #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        pass
+        softmax = (np.exp(z3 - np.max(z3)) / sum(np.exp(z3 - np.max(z3)))) 
+        K = len(self.params['b2'])
+        delta_matrix = np.zeros((N,K))
+        for i in range(N):
+          for j in range(K):
+            if y[i] == j:
+              delta_matrix[i,j] = 1
+       
+        relu_z2 = np.zeros(z2.shape)
+        relu_z2[z2<=0] = 0
+        relu_z2[z2>0] = 1
+        # print(softmax.shape)
+        # print(delta_matrix.shape)
+        # print("relu':")
+        # print(relu_z2.shape)
+        # print("a2")
+        # print(a2.shape)
+        # print("a1")
+        # print(X.shape)
+        # print("W1")
+        # print(W1.shape)
+        # print("W2")
+        # print(W2.shape)
+        grads['W2'] = ((1/N) * np.matmul((softmax - delta_matrix.T), a2.T).T) + 2 * reg * W2
+        # print("w2 done")
+        grads['b2'] = ((1/N) * (softmax - delta_matrix.T))
+        # print("b2 done")
+        grads['W1'] = ((1/N) * np.matmul(np.matmul(W2,(softmax - delta_matrix.T)) * relu_z2,X).T) +  2 * reg * W1
+        # print("w1 done")
+        grads['b1'] = ((1/N) * np.matmul(W2,(softmax - delta_matrix.T)) * relu_z2)
+        # print("b1 done")
 
+        # print(grads['W2'].shape)
+        # print(grads['b2'].shape)
+        # print(grads['W1'].shape)
+        # print(grads['b1'].shape)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
         return loss, grads

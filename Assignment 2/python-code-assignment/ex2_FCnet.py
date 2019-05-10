@@ -110,13 +110,18 @@ print(np.sum(np.abs(loss - correct_loss)))
 # # pass.  If your implementation is correct, the difference between the numeric
 # # and analytic gradients should be less than 1e-8 for each of W1, W2, b1, and
 # # b2.
-# loss, grads = net.loss(X, y, reg=0.05)
-
-# # these should all be less than 1e-8 or so
-# for param_name in grads:
-#     f = lambda W: net.loss(X, y, reg=0.05)[0]
-#     param_grad_num = eval_numerical_gradient(f, net.params[param_name], verbose=False)
-#     print('%s max relative error: %e' % (param_name, rel_error(param_grad_num, grads[param_name])))
+loss, grads = net.loss(X, y, reg=0.05)
+print(grads['W1'].shape)
+print(grads['W2'].shape)
+# these should all be less than 1e-8 or so
+for param_name in grads:
+    f = lambda W: net.loss(X, y, reg=0.05)[0]
+    param_grad_num = eval_numerical_gradient(f, net.params[param_name], verbose=False)
+    print("*****")
+    #print('%s max relative error:', param_name)
+    print(param_grad_num.shape)
+    print(grads[param_name].shape)
+    print('%s max relative error: %e' % (param_name, rel_error(param_grad_num, grads[param_name])))
 
 
 # #======================================================================================

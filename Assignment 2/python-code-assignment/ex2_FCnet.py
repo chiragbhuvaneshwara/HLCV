@@ -101,22 +101,22 @@ print(np.sum(np.abs(loss - correct_loss)))
 # #======================================================================================
 # # Q2:Computing gradients using back propogation
 # #======================================================================================
-# # Implement the rest of the function. This will compute the gradient of the
-# # loss with respect to the variables `W1`, `b1`, `W2`, and `b2`. Now that you
-# # (hopefully!) have a correctly implemented forward pass, you can debug your
-# # backward pass using a numeric gradient check:
+# Implement the rest of the function. This will compute the gradient of the
+# loss with respect to the variables `W1`, `b1`, `W2`, and `b2`. Now that you
+# (hopefully!) have a correctly implemented forward pass, you can debug your
+# backward pass using a numeric gradient check:
 
-# # Use numeric gradient checking to check your implementation of the backward
-# # pass.  If your implementation is correct, the difference between the numeric
-# # and analytic gradients should be less than 1e-8 for each of W1, W2, b1, and
-# # b2.
-# loss, grads = net.loss(X, y, reg=0.05)
+# Use numeric gradient checking to check your implementation of the backward
+# pass.  If your implementation is correct, the difference between the numeric
+# and analytic gradients should be less than 1e-8 for each of W1, W2, b1, and
+# b2.
+loss, grads = net.loss(X, y, reg=0.05)
 
-# # these should all be less than 1e-8 or so
-# for param_name in grads:
-#     f = lambda W: net.loss(X, y, reg=0.05)[0]
-#     param_grad_num = eval_numerical_gradient(f, net.params[param_name], verbose=False)
-#     print('%s max relative error: %e' % (param_name, rel_error(param_grad_num, grads[param_name])))
+# these should all be less than 1e-8 or so
+for param_name in grads:
+    f = lambda W: net.loss(X, y, reg=0.05)[0]
+    param_grad_num = eval_numerical_gradient(f, net.params[param_name], verbose=False)
+    print('%s max relative error: %e' % (param_name, rel_error(param_grad_num, grads[param_name])))
 
 
 #======================================================================================
@@ -136,7 +136,7 @@ print(np.sum(np.abs(loss - correct_loss)))
 net = init_toy_model()
 stats = net.train(X, y, X, y,
             learning_rate=1e-1, reg=5e-6,
-            num_iters=100, verbose=False)
+            num_iters=100, verbose=False, batch_size=5)
 
 print('Final training loss: ', stats['loss_history'][-1])
 

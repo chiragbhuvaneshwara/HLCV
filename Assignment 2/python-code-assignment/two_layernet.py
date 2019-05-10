@@ -97,7 +97,8 @@ class TwoLayerNet(object):
         b1 = b1.reshape(b1.shape[0], 1)
         b2 = b2.reshape(b2.shape[0], 1)
         # print(X.T.shape)
-        # print(W1.T.shape)
+        print("W1",W1.T.shape)
+        print(W2.T.shape)
         z2 = np.dot(W1.T,X.T) + b1
         #print(z2.shape)
         a2 = z2 * (z2>0) 
@@ -219,7 +220,7 @@ class TwoLayerNet(object):
             # them in X_batch and y_batch respectively.                             #
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-            index = np.random.choice(X_batch.shape[0], 2, replace=False) 
+            index = np.random.choice(X_batch.shape[0], batch_size, replace=False) 
             X_batch = X_batch[index]
             y_batch = y_batch[index]
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -246,6 +247,10 @@ class TwoLayerNet(object):
             # Every epoch, check train and val accuracy and decay learning rate.
             if it % iterations_per_epoch == 0:
                 # Check accuracy
+                # print("____________________________________")
+                # print( self.predict(X_batch) )
+                # print(y_batch)
+                # print( self.predict(X_batch) == y_batch )
                 train_acc = (self.predict(X_batch) == y_batch).mean()
                 val_acc = (self.predict(X_val) == y_val).mean()
                 train_acc_history.append(train_acc)
@@ -282,7 +287,7 @@ class TwoLayerNet(object):
         ###########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        y_pred = self.loss(X)
+        y_pred = np.argmax(self.loss(X))
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 

@@ -167,11 +167,11 @@ class TwoLayerNet(object):
         # print(W2.shape)
         grads['W2'] = ((1/N) * np.matmul((softmax - delta_matrix.T), a2.T).T) + 2 * reg * W2
         # print("w2 done")
-        grads['b2'] = ((1/N) * (softmax - delta_matrix.T))
-        # print("b2 done")
+        grads['b2'] = np.sum((1/N) * (softmax - delta_matrix.T), axis = 1)
+        # print(grads['b2'])
         grads['W1'] = ((1/N) * np.matmul(np.matmul(W2,(softmax - delta_matrix.T)) * relu_z2,X).T) +  2 * reg * W1
         # print("w1 done")
-        grads['b1'] = ((1/N) * np.matmul(W2,(softmax - delta_matrix.T)) * relu_z2)
+        grads['b1'] = np.sum((1/N) * np.matmul(W2,(softmax - delta_matrix.T)) * relu_z2, axis = 1)
         # print("b1 done")
 
         # print(grads['W2'].shape)

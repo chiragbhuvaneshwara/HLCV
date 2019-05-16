@@ -104,7 +104,39 @@ class ConvNet(nn.Module):
         #################################################################################
         layers = []
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.relu = nn.ReLU()
 
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=128, kernel_size=3, stride=1, padding=1) 
+        self.conv2 = nn.Conv2d(in_channels=128, out_channels=512, kernel_size=3, stride=1, padding=1) 
+        self.conv3 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv4 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv5 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+
+        self.fc1 = nn.Linear(512, num_classes)
+
+
+        self.softmax = nn.Softmax()
+
+        layers = [self.conv1, self.pool, self.relu, self.conv2, self.pool, self.relu, self.conv3, self.pool, self.relu, self.conv4, self.pool, self.relu, self.conv5, self.pool, self.relu, self.fc1, self.softmax]
+
+        # layers.append( nn.Conv2d(in_channels=3, out_channels=128, kernel_size=3, stride=1, padding=1) )
+        # layers.append( nn.ReLU() )
+
+        # layers.append( nn.MaxPool2d(kernel_size=2, stride=2) )
+
+        # layers.append( nn.Conv2d(in_channels=128, out_channels=512, kernel_size=3, stride=1, padding=1) )
+        # layers.append( nn.ReLU() )
+
+        # layers.append( nn.MaxPool2d(kernel_size=2, stride=2) )
+
+        # layers.append( nn.MaxPool2d(kernel_size=2, stride=2) )
+
+        # layers.append(nn.Linear(512, num_classes))
+        # layers.append( nn.Softmax() )
+        
+        self.layers = nn.Sequential(*layers)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -113,6 +145,38 @@ class ConvNet(nn.Module):
         # TODO: Implement the forward pass computations                                 #
         #################################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        
+        x = self.relu(self.pool(self.conv1(x)))
+        x = self.relu(self.pool(self.conv2(x)))
+        x = self.relu(self.pool(self.conv3(x)))
+        x = self.relu(self.pool(self.conv4(x)))
+        x = self.relu(self.pool(self.conv5(x)))
+
+        out = self.softmax(self.fc1(x.squeeze()))
+
+        # print("Start",x.size())
+        # x = self.conv1(x)
+        # print("conv",x.size())
+        # x = self.pool(x)
+        # print("pool",x.size()) 
+        # x = self.relu(x)
+
+
+        # # x = self.relu(  self.pool( self.conv1(x) )  )
+        # print("relu",x.size())
+
+        # x = self.relu(   self.pool(  self.pool( self.conv2(x) )  )   )
+        # print(x.size())
+
+        # out = self.softmax(  self.fc1(x.squeeze() )  )
+
+        # firstConv = self.layers[0]( x )
+        # firstLayer = self.layers[1]( firstConv )
+        # 
+        # secondPool = self.layers[2]( firstLayer ) 
+
+
+
 
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -130,7 +194,7 @@ def PrintModelSize(model, disp=True):
     # training                                                                      #
     #################################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+    model_sz = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return model_sz
@@ -146,6 +210,29 @@ def VisualizeFilter(model):
     # You can use matlplotlib.imshow to visualize an image in python                #
     #################################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    tensor = model.layers[0].weight.data.numpy()
+
+    t_max = np.amax(tensor)
+    t_min = np.amin(tensor)
+
+    tensor = (tensor - t_min) / (t_max - t_min) 
+    # tensor = tensor.astype(int)
+
+    num_cols = 16
+    num_kernels = tensor.shape[0]
+    num_rows = 1+ num_kernels // num_cols
+    fig = plt.figure(figsize=(num_cols,num_rows))
+    fig.set_facecolor("black")
+
+    for i in range(tensor.shape[0]):
+        ax1 = fig.add_subplot(num_rows,num_cols,i+1)
+        ax1.imshow(tensor[i],)
+        ax1.axis('off')
+        ax1.set_xticklabels([])
+        ax1.set_yticklabels([])
+
+    plt.subplots_adjust(wspace=0.1, hspace=0.1)
+    plt.show()
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 

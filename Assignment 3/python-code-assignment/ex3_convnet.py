@@ -108,33 +108,25 @@ class ConvNet(nn.Module):
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
         self.relu = nn.ReLU()
 
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=128, kernel_size=3, stride=1, padding=1) 
-        self.conv2 = nn.Conv2d(in_channels=128, out_channels=512, kernel_size=3, stride=1, padding=1) 
-        self.conv3 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv4 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
-        self.conv5 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, stride=1, padding=1)
+        self.conv1 = nn.Conv2d(in_channels=input_size, out_channels=hidden_layers[0], kernel_size=3, stride=1, padding=1) 
+        self.conv2 = nn.Conv2d(in_channels=hidden_layers[0], out_channels=hidden_layers[1], kernel_size=3, stride=1, padding=1) 
+        self.conv3 = nn.Conv2d(in_channels=hidden_layers[1], out_channels=hidden_layers[2], kernel_size=3, stride=1, padding=1)
+        self.conv4 = nn.Conv2d(in_channels=hidden_layers[2], out_channels=hidden_layers[3], kernel_size=3, stride=1, padding=1)
+        self.conv5 = nn.Conv2d(in_channels=hidden_layers[3], out_channels=hidden_layers[4], kernel_size=3, stride=1, padding=1)
 
-        self.fc1 = nn.Linear(512, num_classes)
-
+        self.fc1 = nn.Linear(hidden_layers[4], hidden_layers[5])
+        self.fc2 = nn.Linear(hidden_layers[5], num_classes)
 
         self.softmax = nn.Softmax()
 
-        layers = [self.conv1, self.pool, self.relu, self.conv2, self.pool, self.relu, self.conv3, self.pool, self.relu, self.conv4, self.pool, self.relu, self.conv5, self.pool, self.relu, self.fc1, self.softmax]
+        layers = [  self.conv1, self.pool, self.relu,
+                    self.conv2, self.pool, self.relu,
+                    self.conv3, self.pool, self.relu,
+                    self.conv4, self.pool, self.relu, 
+                    self.conv5, self.pool, self.relu, 
+                    self.fc1, self.relu,
+                    self.fc2, self.softmax  ]
 
-        # layers.append( nn.Conv2d(in_channels=3, out_channels=128, kernel_size=3, stride=1, padding=1) )
-        # layers.append( nn.ReLU() )
-
-        # layers.append( nn.MaxPool2d(kernel_size=2, stride=2) )
-
-        # layers.append( nn.Conv2d(in_channels=128, out_channels=512, kernel_size=3, stride=1, padding=1) )
-        # layers.append( nn.ReLU() )
-
-        # layers.append( nn.MaxPool2d(kernel_size=2, stride=2) )
-
-        # layers.append( nn.MaxPool2d(kernel_size=2, stride=2) )
-
-        # layers.append(nn.Linear(512, num_classes))
-        # layers.append( nn.Softmax() )
         
         self.layers = nn.Sequential(*layers)
 
@@ -151,33 +143,10 @@ class ConvNet(nn.Module):
         x = self.relu(self.pool(self.conv3(x)))
         x = self.relu(self.pool(self.conv4(x)))
         x = self.relu(self.pool(self.conv5(x)))
+        x = self.relu(self.fc1(x.squeeze()))
 
-        out = self.softmax(self.fc1(x.squeeze()))
-
-        # print("Start",x.size())
-        # x = self.conv1(x)
-        # print("conv",x.size())
-        # x = self.pool(x)
-        # print("pool",x.size()) 
-        # x = self.relu(x)
-
-
-        # # x = self.relu(  self.pool( self.conv1(x) )  )
-        # print("relu",x.size())
-
-        # x = self.relu(   self.pool(  self.pool( self.conv2(x) )  )   )
-        # print(x.size())
-
-        # out = self.softmax(  self.fc1(x.squeeze() )  )
-
-        # firstConv = self.layers[0]( x )
-        # firstLayer = self.layers[1]( firstConv )
-        # 
-        # secondPool = self.layers[2]( firstLayer ) 
-
-
-
-
+        out = self.fc2(x.squeeze())
+        # out = self.softmax(self.fc2(x.squeeze()))
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return out

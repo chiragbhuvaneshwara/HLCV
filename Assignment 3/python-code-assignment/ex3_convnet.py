@@ -79,6 +79,8 @@ train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
                                            batch_size=batch_size,
                                            shuffle=True)
 
+train_loader
+
 val_loader = torch.utils.data.DataLoader(dataset=val_dataset,
                                            batch_size=batch_size,
                                            shuffle=False)
@@ -179,13 +181,19 @@ def VisualizeFilter(model):
     # You can use matlplotlib.imshow to visualize an image in python                #
     #################################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    tensor = model.layers[0].weight.data.numpy()
+    
+    # print(type(model.layers[0].weight.data))
+
+    tensor = torch.ones(model.layers[0].weight.data.size())
+    # tensor.new_tensor(model.layers[0].weight.data, requires_grad=False)
+    tensor = model.layers[0].weight.clone().detach().requires_grad_(False)
+    tensor = tensor.cpu().data.numpy()
+    
 
     t_max = np.amax(tensor)
     t_min = np.amin(tensor)
 
     tensor = (tensor - t_min) / (t_max - t_min) 
-    # tensor = tensor.astype(int)
 
     num_cols = 16
     num_kernels = tensor.shape[0]
@@ -313,5 +321,3 @@ with torch.no_grad():
 VisualizeFilter(model)
 # Save the model checkpoint
 torch.save(model.state_dict(), 'model.ckpt')
-
-

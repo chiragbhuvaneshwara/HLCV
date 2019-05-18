@@ -119,7 +119,7 @@ class ConvNet(nn.Module):
         self.fc1 = nn.Linear(hidden_layers[4], hidden_layers[5])
         self.fc2 = nn.Linear(hidden_layers[5], num_classes)
 
-        self.softmax = nn.Softmax()
+        
 
         layers = [  self.conv1, self.pool, self.relu,
                     self.conv2, self.pool, self.relu,
@@ -127,7 +127,7 @@ class ConvNet(nn.Module):
                     self.conv4, self.pool, self.relu, 
                     self.conv5, self.pool, self.relu, 
                     self.fc1, self.relu,
-                    self.fc2, self.softmax  ]
+                    self.fc2  ]
 
         
         self.layers = nn.Sequential(*layers)
@@ -147,9 +147,8 @@ class ConvNet(nn.Module):
         x = self.relu(self.pool(self.conv5(x)))
         x = self.relu(self.fc1(x.squeeze()))
 
-        out = self.fc2(x.squeeze())
-        # out = self.softmax(self.fc2(x.squeeze()))
-
+        out = self.fc2(x)
+        
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return out
 

@@ -6,6 +6,12 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
+import os
+n = 113
+np.random.seed(n)
+torch.cuda.manual_seed_all(n)
+torch.manual_seed(n)
+
 def weights_init(m):
     if type(m) == nn.Linear:
         m.weight.data.normal_(0.0, 1e-3)
@@ -107,29 +113,72 @@ class ConvNet(nn.Module):
         layers = []
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         
-        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.relu = nn.ReLU()
+        # Q1.a
+        self.conv = nn.Sequential(
+                    nn.Conv2d(in_channels=input_size, out_channels=hidden_layers[0], kernel_size=3, stride=1, padding=1),
+                    nn.MaxPool2d(kernel_size=2, stride=2),
+                    nn.ReLU(),
 
-        self.conv1 = nn.Conv2d(in_channels=input_size, out_channels=hidden_layers[0], kernel_size=3, stride=1, padding=1) 
-        self.conv2 = nn.Conv2d(in_channels=hidden_layers[0], out_channels=hidden_layers[1], kernel_size=3, stride=1, padding=1) 
-        self.conv3 = nn.Conv2d(in_channels=hidden_layers[1], out_channels=hidden_layers[2], kernel_size=3, stride=1, padding=1)
-        self.conv4 = nn.Conv2d(in_channels=hidden_layers[2], out_channels=hidden_layers[3], kernel_size=3, stride=1, padding=1)
-        self.conv5 = nn.Conv2d(in_channels=hidden_layers[3], out_channels=hidden_layers[4], kernel_size=3, stride=1, padding=1)
+                    nn.Conv2d(in_channels=hidden_layers[0], out_channels=hidden_layers[1], kernel_size=3, stride=1, padding=1),
+                    nn.MaxPool2d(kernel_size=2, stride=2),
+                    nn.ReLU(),
 
-        self.fc1 = nn.Linear(hidden_layers[4], hidden_layers[5])
-        self.fc2 = nn.Linear(hidden_layers[5], num_classes)
+                    nn.Conv2d(in_channels=hidden_layers[1], out_channels=hidden_layers[2], kernel_size=3, stride=1, padding=1),
+                    nn.MaxPool2d(kernel_size=2, stride=2),
+                    nn.ReLU(),
 
+                    nn.Conv2d(in_channels=hidden_layers[2], out_channels=hidden_layers[3], kernel_size=3, stride=1, padding=1),
+                    nn.MaxPool2d(kernel_size=2, stride=2),
+                    nn.ReLU(),
+
+                    nn.Conv2d(in_channels=hidden_layers[3], out_channels=hidden_layers[4], kernel_size=3, stride=1, padding=1),
+                    nn.MaxPool2d(kernel_size=2, stride=2),
+                    nn.ReLU()
+                            )
+
+        self.fc = nn.Sequential( 
+                    nn.Linear(hidden_layers[4], hidden_layers[5]),
+                    nn.ReLU(),
+
+                    nn.Linear(hidden_layers[5], num_classes)
+                        )
+
+        # Q2.a
+        # self.conv = nn.Sequential(
+        #             nn.Conv2d(in_channels=input_size, out_channels=hidden_layers[0], kernel_size=3, stride=1, padding=1),
+        #             nn.BatchNorm2d(hidden_layers[0]),
+        #             nn.MaxPool2d(kernel_size=2, stride=2),
+        #             nn.ReLU(),
+        #
+        #             nn.Conv2d(in_channels=hidden_layers[0], out_channels=hidden_layers[1], kernel_size=3, stride=1, padding=1),
+        #             nn.BatchNorm2d(hidden_layers[1]),
+        #             nn.MaxPool2d(kernel_size=2, stride=2),
+        #             nn.ReLU(),
+        #
+        #             nn.Conv2d(in_channels=hidden_layers[1], out_channels=hidden_layers[2], kernel_size=3, stride=1, padding=1),
+        #             nn.BatchNorm2d(hidden_layers[2]),
+        #             nn.MaxPool2d(kernel_size=2, stride=2),
+        #             nn.ReLU(),
+        #
+        #             nn.Conv2d(in_channels=hidden_layers[2], out_channels=hidden_layers[3], kernel_size=3, stride=1, padding=1),
+        #             nn.BatchNorm2d(hidden_layers[3]),
+        #             nn.MaxPool2d(kernel_size=2, stride=2),
+        #             nn.ReLU(),
+        #
+        #             nn.Conv2d(in_channels=hidden_layers[3], out_channels=hidden_layers[4], kernel_size=3, stride=1, padding=1),
+        #             nn.BatchNorm2d(hidden_layers[4]),
+        #             nn.MaxPool2d(kernel_size=2, stride=2),
+        #             nn.ReLU()    )
+        #
+        # self.fc = nn.Sequential(
+        #             nn.Linear(hidden_layers[4], hidden_layers[5]),
+        #             nn.BatchNorm1d(hidden_layers[5]),
+        #             nn.ReLU(),
+        #
+        #             nn.Linear(hidden_layers[5], num_classes)
+        #                 )
         
-
-        layers = [  self.conv1, self.pool, self.relu,
-                    self.conv2, self.pool, self.relu,
-                    self.conv3, self.pool, self.relu,
-                    self.conv4, self.pool, self.relu, 
-                    self.conv5, self.pool, self.relu, 
-                    self.fc1, self.relu,
-                    self.fc2  ]
-
-        
+        layers = [self.conv, self.fc]
         self.layers = nn.Sequential(*layers)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
@@ -140,14 +189,9 @@ class ConvNet(nn.Module):
         #################################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         
-        x = self.relu(self.pool(self.conv1(x)))
-        x = self.relu(self.pool(self.conv2(x)))
-        x = self.relu(self.pool(self.conv3(x)))
-        x = self.relu(self.pool(self.conv4(x)))
-        x = self.relu(self.pool(self.conv5(x)))
-        x = self.relu(self.fc1(x.squeeze()))
-
-        out = self.fc2(x)
+        x = self.conv(x)
+        x = x.squeeze()
+        out = self.fc(x)
         
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return out
@@ -183,9 +227,10 @@ def VisualizeFilter(model):
     
     # print(type(model.layers[0].weight.data))
 
-    tensor = torch.ones(model.layers[0].weight.data.size())
+    
+    tensor = torch.ones(model.layers[0][0].weight.data.size())
     # tensor.new_tensor(model.layers[0].weight.data, requires_grad=False)
-    tensor = model.layers[0].weight.clone().detach().requires_grad_(False)
+    tensor = model.layers[0][0].weight.clone().detach().requires_grad_(False)
     tensor = tensor.cpu().data.numpy()
     
 
@@ -289,6 +334,11 @@ for epoch in range(num_epochs):
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     model.train()
+    
+    # SAVE_DIR = "/home/chirag/Documents/Uni/Sem 4/HLCV/Assignments/HLCV/Assignment 3"
+    # path = os.path.join(SAVE_DIR, 'model.pth')
+    # torch.save(model.cpu().state_dict(), path) # saving model
+    # model.cuda() # moving model to GPU for further training
 
 # Test the model
 # In test phase, we don't need to compute gradients (for memory efficiency)

@@ -58,21 +58,6 @@ print(hidden_size)
 data_aug_transforms = []
 # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-# transformsList = [
-#     # transforms.RandomCrop(32, padding=4),
-#     transforms.RandomHorizontalFlip(),
-#     transforms.RandomRotation(15),
-#     transforms.RandomAffine(degrees=0, translate=(.3,.7)),
-#     # transforms.ColorJitter(
-#     #         brightness=float(0.1*np.random.rand(1)),
-#     #         contrast=float(0.1*np.random.rand(1)),
-#     #         saturation=float(0.1*np.random.rand(1)),
-#     #         hue=float(0.1*np.random.rand(1))),
-#     transforms.RandomGrayscale(p=0.1)   
-#                 ]
-
-# data_aug_transforms = transformsList
-# data_aug_transforms = transforms.RandomApply(transformsList, p=0.5)
 # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 norm_transform = transforms.Compose(data_aug_transforms+[transforms.ToTensor(),
                                      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
@@ -120,7 +105,7 @@ test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
 # Set norm_layer for different networks whether using batch normalization
 #-------------------------------------------------
 class ConvNet(nn.Module):
-    def __init__(self, input_size, hidden_layers, num_classes, norm_layer=None):
+    def __init__(self, input_size, hidden_layers, num_classes, p, norm_layer=None):
         super(ConvNet, self).__init__()
         #################################################################################
         # TODO: Initialize the modules required to implement the convolutional layer    #
@@ -132,71 +117,46 @@ class ConvNet(nn.Module):
         layers = []
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         
-        # Q1.a
+        
         self.conv = nn.Sequential(
                     nn.Conv2d(in_channels=input_size, out_channels=hidden_layers[0], kernel_size=3, stride=1, padding=1),
+                    # nn.BatchNorm2d(hidden_layers[0]),
                     nn.MaxPool2d(kernel_size=2, stride=2),
                     nn.ReLU(),
-
+                    nn.Dropout2d(p),
+        
                     nn.Conv2d(in_channels=hidden_layers[0], out_channels=hidden_layers[1], kernel_size=3, stride=1, padding=1),
+                    # nn.BatchNorm2d(hidden_layers[1]),
                     nn.MaxPool2d(kernel_size=2, stride=2),
                     nn.ReLU(),
-
+                    nn.Dropout2d(p),
+        
                     nn.Conv2d(in_channels=hidden_layers[1], out_channels=hidden_layers[2], kernel_size=3, stride=1, padding=1),
+                    # nn.BatchNorm2d(hidden_layers[2]),
                     nn.MaxPool2d(kernel_size=2, stride=2),
                     nn.ReLU(),
-
+                    nn.Dropout2d(p),
+        
                     nn.Conv2d(in_channels=hidden_layers[2], out_channels=hidden_layers[3], kernel_size=3, stride=1, padding=1),
+                    # nn.BatchNorm2d(hidden_layers[3]),
                     nn.MaxPool2d(kernel_size=2, stride=2),
                     nn.ReLU(),
-
+                    nn.Dropout2d(p),
+        
                     nn.Conv2d(in_channels=hidden_layers[3], out_channels=hidden_layers[4], kernel_size=3, stride=1, padding=1),
+                    # nn.BatchNorm2d(hidden_layers[4]),
                     nn.MaxPool2d(kernel_size=2, stride=2),
-                    nn.ReLU()
-                            )
-
-        self.fc = nn.Sequential( 
-                    nn.Linear(hidden_layers[4], hidden_layers[5]),
                     nn.ReLU(),
-
+                    nn.Dropout2d(p)    )
+        
+        self.fc = nn.Sequential(
+                    nn.Linear(hidden_layers[4], hidden_layers[5]),
+                    # nn.BatchNorm1d(hidden_layers[5]),
+                    nn.ReLU(),
+        
                     nn.Linear(hidden_layers[5], num_classes)
                         )
-
-        # Q2.a
-        # self.conv = nn.Sequential(
-        #             nn.Conv2d(in_channels=input_size, out_channels=hidden_layers[0], kernel_size=3, stride=1, padding=1),
-        #             nn.BatchNorm2d(hidden_layers[0]),
-        #             nn.MaxPool2d(kernel_size=2, stride=2),
-        #             nn.ReLU(),
         
-        #             nn.Conv2d(in_channels=hidden_layers[0], out_channels=hidden_layers[1], kernel_size=3, stride=1, padding=1),
-        #             nn.BatchNorm2d(hidden_layers[1]),
-        #             nn.MaxPool2d(kernel_size=2, stride=2),
-        #             nn.ReLU(),
-        
-        #             nn.Conv2d(in_channels=hidden_layers[1], out_channels=hidden_layers[2], kernel_size=3, stride=1, padding=1),
-        #             nn.BatchNorm2d(hidden_layers[2]),
-        #             nn.MaxPool2d(kernel_size=2, stride=2),
-        #             nn.ReLU(),
-        
-        #             nn.Conv2d(in_channels=hidden_layers[2], out_channels=hidden_layers[3], kernel_size=3, stride=1, padding=1),
-        #             nn.BatchNorm2d(hidden_layers[3]),
-        #             nn.MaxPool2d(kernel_size=2, stride=2),
-        #             nn.ReLU(),
-        
-        #             nn.Conv2d(in_channels=hidden_layers[3], out_channels=hidden_layers[4], kernel_size=3, stride=1, padding=1),
-        #             nn.BatchNorm2d(hidden_layers[4]),
-        #             nn.MaxPool2d(kernel_size=2, stride=2),
-        #             nn.ReLU()    )
-        
-        # self.fc = nn.Sequential(
-        #             nn.Linear(hidden_layers[4], hidden_layers[5]),
-        #             nn.BatchNorm1d(hidden_layers[5]),
-        #             nn.ReLU(),
-        
-        #             nn.Linear(hidden_layers[5], num_classes)
-        #                 )
-
         layers = [self.conv, self.fc]
         self.layers = nn.Sequential(*layers)
 
@@ -229,7 +189,7 @@ def PrintModelSize(model, disp=True):
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     model_sz = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(model_sz)
-
+    
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return model_sz
 
@@ -244,6 +204,9 @@ def VisualizeFilter(model):
     # You can use matlplotlib.imshow to visualize an image in python                #
     #################################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    
+    # print(type(model.layers[0].weight.data))
+
     
     tensor = torch.ones(model.layers[0][0].weight.data.size())
     # tensor.new_tensor(model.layers[0].weight.data, requires_grad=False)
@@ -280,111 +243,127 @@ def VisualizeFilter(model):
 # In this question we will implement a convolutional neural networks using the PyTorch
 # library.  Please complete the code for the ConvNet class evaluating the model
 #--------------------------------------------------------------------------------------
+pVals = [i/10 for i in range(1,10)]
+pVals = [0.1, 0.2]
+
+trainAcc = []
+valAcc = []
+for p in pVals:
+
+    print("######################################################################")
+    print("current value of p is:", p)
+    print("######################################################################")
+
+    model = ConvNet(input_size, hidden_size, num_classes, p, norm_layer=norm_layer).to(device)
+    # Q2.a - Initialize the model with correct batch norm layer
+
+    model.apply(weights_init)
+    # Print the model
+    # print(model)
+    # Print model size
+    #======================================================================================
+    # Q1.b: Implementing the function to count the number of trainable parameters in the model
+    #======================================================================================
+    PrintModelSize(model)
+    #======================================================================================
+    # Q1.a: Implementing the function to visualize the filters in the first conv layers.
+    # Visualize the filters before training
+    #======================================================================================
+    # VisualizeFilter(model)
 
 
-model = ConvNet(input_size, hidden_size, num_classes, norm_layer=norm_layer).to(device)
-# Q2.a - Initialize the model with correct batch norm layer
+    # Loss and optimizer
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=reg)
 
-model.apply(weights_init)
-# Print the model
-print(model)
-# Print model size
-#======================================================================================
-# Q1.b: Implementing the function to count the number of trainable parameters in the model
-#======================================================================================
-PrintModelSize(model)
-#======================================================================================
-# Q1.a: Implementing the function to visualize the filters in the first conv layers.
-# Visualize the filters before training
-#======================================================================================
-VisualizeFilter(model)
+    # Train the model
+    lr = learning_rate
+    total_step = len(train_loader)
+    for epoch in range(num_epochs):
+        for i, (images, labels) in enumerate(train_loader):
+            # Move tensors to the configured device
+            images = images.to(device)
+            labels = labels.to(device)
+
+            # Forward pass
+            outputs = model(images)
+
+            loss = criterion(outputs, labels)
+
+            # Backward and optimize
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            if (i+1) % 100 == 0:
+                print ('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'
+                    .format(epoch+1, num_epochs, i+1, total_step, loss.item()))
+
+        # Code to update the lr
+        lr *= learning_rate_decay
+        update_lr(optimizer, lr)
+        model.eval()
+        with torch.no_grad():
+            correct = 0
+            total = 0
+            for images, labels in val_loader:
+                images = images.to(device)
+                labels = labels.to(device)
+                outputs = model(images)
+                _, predicted = torch.max(outputs.data, 1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
+
+            print('Validataion accuracy is: {} %'.format(100 * correct / total))
+            #################################################################################
+            # TODO: Q2.b Implement the early stopping mechanism to save the model which has #
+            # acheieved the best validation accuracy so-far.                                #
+            #################################################################################
+            best_model = None
+            # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+
+            # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+
+        model.train()
+        
+    trainAcc.append(100 * correct / total)
 
 
-# Loss and optimizer
-criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=reg)
-
-# Train the model
-lr = learning_rate
-total_step = len(train_loader)
-
-
-for epoch in range(num_epochs):
-    for i, (images, labels) in enumerate(train_loader):
-        # Move tensors to the configured device
-        images = images.to(device)
-        labels = labels.to(device)
-
-        # Forward pass
-        outputs = model(images)
-
-        loss = criterion(outputs, labels)
-
-        # Backward and optimize
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-        if (i+1) % 100 == 0:
-            print ('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'
-                .format(epoch+1, num_epochs, i+1, total_step, loss.item()))
-
-    # Code to update the lr
-    lr *= learning_rate_decay
-    update_lr(optimizer, lr)
+    # Test the model
+    # In test phase, we don't need to compute gradients (for memory efficiency)
     model.eval()
+    #################################################################################
+    # TODO: Q2.b Implement the early stopping mechanism to load the weights from the#
+    # best model so far and perform testing with this model.                        #
+    #################################################################################
+    # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+
+    # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     with torch.no_grad():
         correct = 0
         total = 0
-        for images, labels in val_loader:
+        for images, labels in test_loader:
             images = images.to(device)
             labels = labels.to(device)
             outputs = model(images)
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
+            if total == 1000:
+                break
 
-        print('Validataion accuracy is: {} %'.format(100 * correct / total))
-        #################################################################################
-        # TODO: Q2.b Implement the early stopping mechanism to save the model which has #
-        # acheieved the best validation accuracy so-far.                                #
-        #################################################################################
-        best_model = None
-        # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        print('Accuracy of the network on the {} test images: {} %'.format(total, 100 * correct / total))
+        valAcc.append(100 * correct / total)
 
-        # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    model.train()
-    
-    
-
-# Test the model
-# In test phase, we don't need to compute gradients (for memory efficiency)
-model.eval()
-#################################################################################
-# TODO: Q2.b Implement the early stopping mechanism to load the weights from the#
-# best model so far and perform testing with this model.                        #
-#################################################################################
-# *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-# *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-with torch.no_grad():
-    correct = 0
-    total = 0
-    for images, labels in test_loader:
-        images = images.to(device)
-        labels = labels.to(device)
-        outputs = model(images)
-        _, predicted = torch.max(outputs.data, 1)
-        total += labels.size(0)
-        correct += (predicted == labels).sum().item()
-        if total == 1000:
-            break
-
-    print('Accuracy of the network on the {} test images: {} %'.format(total, 100 * correct / total))
-
-# Q1.c: Implementing the function to visualize the filters in the first conv layers.
-# Visualize the filters before training
-VisualizeFilter(model)
-# Save the model checkpoint
-torch.save(model.state_dict(), 'model.ckpt')
+    # Q1.c: Implementing the function to visualize the filters in the first conv layers.
+    # Visualize the filters before training
+    # VisualizeFilter(model)
+    # Save the model checkpoint
+    torch.save(model.state_dict(), 'model.ckpt')
+# print(trainAcc, valAcc)
+plt.plot(pVals, valAcc, label = "Test Acc")
+plt.plot(pVals, trainAcc, label = "Train Acc")
+plt.xlabel("Dropout Probability")
+plt.ylabel("Accuracy")
+plt.legend(loc="upper right")
+plt.show()

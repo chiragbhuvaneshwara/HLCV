@@ -3,11 +3,23 @@ import torch.nn as nn
 import torchvision
 from torchvision import models
 import torchvision.transforms as transforms
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+
+n = 1234
+np.random.seed(n)
+torch.cuda.manual_seed_all(n)
+torch.manual_seed(n)
 
 def weights_init(m):
     if type(m) == nn.Linear:
-        m.weight.data.normal_(0.0, 1e-3)
-        m.bias.data.fill_(0.)
+        nn.init.normal_(m.weight.data, mean=0.0, std=1e-3)
+        m.bias.data.fill_(0.0)
+        
+    if isinstance(m, nn.Conv2d):
+        nn.init.xavier_normal_(m.weight.data) 
+        m.bias.data.fill_(0.0)
 
 def update_lr(optimizer, lr):
     for param_group in optimizer.param_groups:
@@ -27,13 +39,13 @@ layer_config= [512, 256]
 num_classes = 10
 num_epochs = 30
 batch_size = 200
-learning_rate = 1e-3
+learning_rate = 0.01 #1e-3
 learning_rate_decay = 0.99
 reg=0#0.001
 num_training= 49000
 num_validation =1000
-fine_tune = True
-pretrained=True
+fine_tune = False
+pretrained= False
 
 data_aug_transforms = [transforms.RandomHorizontalFlip(p=0.5)]#, transforms.RandomGrayscale(p=0.05)]
 #-------------------------------------------------
@@ -93,6 +105,21 @@ class VggModel(nn.Module):
         #################################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
+        vgg11_bn = models.vgg11_bn(pretrained=pretrained)  #load the pretrained model
+
+        self.model = nn.Sequential()
+
+        self.model.features = vgg11_bn.features
+
+        set_parameter_requires_grad(self.model, fine_tune)
+
+        #add 2 linear layers
+        self.model.classifier = nn.Sequential(
+                    nn.Linear(in_features=layer_config[0], out_features=layer_config[1], bias=True),
+                    nn.BatchNorm1d(layer_config[1]),
+                    nn.ReLU(),
+                    nn.Linear(in_features=layer_config[1], out_features=n_class, bias=True)
+                        )
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -101,8 +128,10 @@ class VggModel(nn.Module):
         # TODO: Implement the forward pass computations                                 #
         #################################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-
+        x = self.model.features(x)
+        x = x.squeeze()
+        out = self.model.classifier(x)
+        
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return out
 
@@ -121,6 +150,10 @@ if fine_tune:
     params_to_update = []
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
+    for name,param in model.named_parameters():
+        if param.requires_grad == True:
+            params_to_update.append(param)
+            print("\t",name)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 else:
@@ -138,6 +171,8 @@ optimizer = torch.optim.Adam(params_to_update, lr=learning_rate, weight_decay=re
 
 # Train the model
 lr = learning_rate
+Loss = []                           #to save all the model losses
+valAcc = []
 total_step = len(train_loader)
 for epoch in range(num_epochs):
     for i, (images, labels) in enumerate(train_loader):
@@ -158,6 +193,7 @@ for epoch in range(num_epochs):
             print ('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'
                    .format(epoch+1, num_epochs, i+1, total_step, loss.item()))
 
+        Loss.append(loss)               #save the loss so we can get accuracies later
     # Code to update the lr
     lr *= learning_rate_decay
     update_lr(optimizer, lr)
@@ -179,9 +215,14 @@ for epoch in range(num_epochs):
         #################################################################################
         best_model = None
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        if not fine_tune:               #get best_model only if we are training or fine-tuning the entire model
+
+            current_valAcc = 100 * correct / total
+            valAcc.append(current_valAcc)
+            if current_valAcc >= np.amax(valAcc):
+                torch.save(model.state_dict(), os.path.join('models', 'model'+str(epoch+1)+'.ckpt'))
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
 
         print('Validataion accuracy is: {} %'.format(100 * correct / total))
 
@@ -190,7 +231,12 @@ for epoch in range(num_epochs):
 # weights from the best model so far and perform testing with this model.       #
 #################################################################################
 # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+if not fine_tune:
+    last_model = model
+    best_id = np.argmax(valAcc)
+    model = VggModel(num_classes, fine_tune, pretrained).to(device)
+    model.load_state_dict(torch.load(os.path.join('models','model'+str(best_id+1)+'.ckpt')))
+    model.eval()
 # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
 # Test the model
@@ -208,8 +254,35 @@ with torch.no_grad():
         if total == 1000:
             break
 
-    print('Accuracy of the network on the {} test images: {} %'.format(total, 100 * correct / total))
+    print('Accuracy of the best network on the {} test images: {} %'.format(total, 100 * correct / total))
+    print("Best Epoch: ", best_id)
 
+with torch.no_grad():
+    correct = 0
+    total = 0
+    for images, labels in test_loader:
+        images = images.to(device)
+        labels = labels.to(device)
+        outputs = last_model(images)
+        _, predicted = torch.max(outputs.data, 1)
+        total += labels.size(0)
+        correct += (predicted == labels).sum().item()
+        if total == 1000:
+            break
+
+    print('Accuracy of the last network on the {} test images: {} %'.format(total, 100 * correct / total))
 # Save the model checkpoint
 torch.save(model.state_dict(), 'model.ckpt')
 
+
+plt.plot(Loss, label = "Loss")
+plt.xlabel("Iterations")
+plt.ylabel("Loss")
+plt.legend(loc="upper right")
+plt.show()
+
+plt.plot(valAcc, label = "Val Acc")
+plt.xlabel("Epochs")
+plt.ylabel("Validation Accuracy")
+plt.legend(loc="upper right")
+plt.show()

@@ -37,7 +37,7 @@ print('Using device: %s'%device)
 input_size = 3
 num_classes = 10
 hidden_size = [128, 512, 512, 512, 512, 512]
-num_epochs = 50
+num_epochs = 200
 batch_size = 200
 learning_rate = 2e-3
 learning_rate_decay = 0.95
@@ -132,70 +132,70 @@ class ConvNet(nn.Module):
         layers = []
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         
-        # # Q1.a
-        # self.conv = nn.Sequential(
-        #             nn.Conv2d(in_channels=input_size, out_channels=hidden_layers[0], kernel_size=3, stride=1, padding=1),
-        #             nn.MaxPool2d(kernel_size=2, stride=2),
-        #             nn.ReLU(),
-
-        #             nn.Conv2d(in_channels=hidden_layers[0], out_channels=hidden_layers[1], kernel_size=3, stride=1, padding=1),
-        #             nn.MaxPool2d(kernel_size=2, stride=2),
-        #             nn.ReLU(),
-
-        #             nn.Conv2d(in_channels=hidden_layers[1], out_channels=hidden_layers[2], kernel_size=3, stride=1, padding=1),
-        #             nn.MaxPool2d(kernel_size=2, stride=2),
-        #             nn.ReLU(),
-
-        #             nn.Conv2d(in_channels=hidden_layers[2], out_channels=hidden_layers[3], kernel_size=3, stride=1, padding=1),
-        #             nn.MaxPool2d(kernel_size=2, stride=2),
-        #             nn.ReLU(),
-
-        #             nn.Conv2d(in_channels=hidden_layers[3], out_channels=hidden_layers[4], kernel_size=3, stride=1, padding=1),
-        #             nn.MaxPool2d(kernel_size=2, stride=2),
-        #             nn.ReLU()
-        #                     )
-
-        # self.fc = nn.Sequential( 
-        #             nn.Linear(hidden_layers[4], hidden_layers[5]),
-        #             nn.ReLU(),
-
-        #             nn.Linear(hidden_layers[5], num_classes)
-        #                 )
-
-        # Q2.a
+        # Q1.a
         self.conv = nn.Sequential(
                     nn.Conv2d(in_channels=input_size, out_channels=hidden_layers[0], kernel_size=3, stride=1, padding=1),
-                    nn.BatchNorm2d(hidden_layers[0]),
                     nn.MaxPool2d(kernel_size=2, stride=2),
                     nn.ReLU(),
-        
+
                     nn.Conv2d(in_channels=hidden_layers[0], out_channels=hidden_layers[1], kernel_size=3, stride=1, padding=1),
-                    nn.BatchNorm2d(hidden_layers[1]),
                     nn.MaxPool2d(kernel_size=2, stride=2),
                     nn.ReLU(),
-        
+
                     nn.Conv2d(in_channels=hidden_layers[1], out_channels=hidden_layers[2], kernel_size=3, stride=1, padding=1),
-                    nn.BatchNorm2d(hidden_layers[2]),
                     nn.MaxPool2d(kernel_size=2, stride=2),
                     nn.ReLU(),
-        
+
                     nn.Conv2d(in_channels=hidden_layers[2], out_channels=hidden_layers[3], kernel_size=3, stride=1, padding=1),
-                    nn.BatchNorm2d(hidden_layers[3]),
                     nn.MaxPool2d(kernel_size=2, stride=2),
                     nn.ReLU(),
-        
+
                     nn.Conv2d(in_channels=hidden_layers[3], out_channels=hidden_layers[4], kernel_size=3, stride=1, padding=1),
-                    nn.BatchNorm2d(hidden_layers[4]),
                     nn.MaxPool2d(kernel_size=2, stride=2),
-                    nn.ReLU()    )
-        
-        self.fc = nn.Sequential(
+                    nn.ReLU()
+                            )
+
+        self.fc = nn.Sequential( 
                     nn.Linear(hidden_layers[4], hidden_layers[5]),
-                    nn.BatchNorm1d(hidden_layers[5]),
                     nn.ReLU(),
-        
+
                     nn.Linear(hidden_layers[5], num_classes)
                         )
+
+        # Q2.a
+        # self.conv = nn.Sequential(
+        #             nn.Conv2d(in_channels=input_size, out_channels=hidden_layers[0], kernel_size=3, stride=1, padding=1),
+        #             nn.BatchNorm2d(hidden_layers[0]),
+        #             nn.MaxPool2d(kernel_size=2, stride=2),
+        #             nn.ReLU(),
+        
+        #             nn.Conv2d(in_channels=hidden_layers[0], out_channels=hidden_layers[1], kernel_size=3, stride=1, padding=1),
+        #             nn.BatchNorm2d(hidden_layers[1]),
+        #             nn.MaxPool2d(kernel_size=2, stride=2),
+        #             nn.ReLU(),
+        
+        #             nn.Conv2d(in_channels=hidden_layers[1], out_channels=hidden_layers[2], kernel_size=3, stride=1, padding=1),
+        #             nn.BatchNorm2d(hidden_layers[2]),
+        #             nn.MaxPool2d(kernel_size=2, stride=2),
+        #             nn.ReLU(),
+        
+        #             nn.Conv2d(in_channels=hidden_layers[2], out_channels=hidden_layers[3], kernel_size=3, stride=1, padding=1),
+        #             nn.BatchNorm2d(hidden_layers[3]),
+        #             nn.MaxPool2d(kernel_size=2, stride=2),
+        #             nn.ReLU(),
+        
+        #             nn.Conv2d(in_channels=hidden_layers[3], out_channels=hidden_layers[4], kernel_size=3, stride=1, padding=1),
+        #             nn.BatchNorm2d(hidden_layers[4]),
+        #             nn.MaxPool2d(kernel_size=2, stride=2),
+        #             nn.ReLU()    )
+        
+        # self.fc = nn.Sequential(
+        #             nn.Linear(hidden_layers[4], hidden_layers[5]),
+        #             nn.BatchNorm1d(hidden_layers[5]),
+        #             nn.ReLU(),
+        
+        #             nn.Linear(hidden_layers[5], num_classes)
+        #                 )
 
         layers = [self.conv, self.fc]
         self.layers = nn.Sequential(*layers)
@@ -228,8 +228,7 @@ def PrintModelSize(model, disp=True):
     #################################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     model_sz = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    print(model_sz)
-    
+
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return model_sz
 
@@ -311,6 +310,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=
 lr = learning_rate
 total_step = len(train_loader)
 
+losses = []
 valAcc = []
 for epoch in range(num_epochs):
     for i, (images, labels) in enumerate(train_loader):
@@ -322,6 +322,7 @@ for epoch in range(num_epochs):
         outputs = model(images)
 
         loss = criterion(outputs, labels)
+        losses.append(loss)
 
         # Backward and optimize
         optimizer.zero_grad()
@@ -417,5 +418,11 @@ torch.save(model.state_dict(), 'model.ckpt')
 plt.plot(valAcc, label = "Val Acc")
 plt.xlabel("Epochs")
 plt.ylabel("Validation Accuracy")
+plt.legend(loc="upper right")
+plt.show()
+
+plt.plot(losses, label = "Loss")
+plt.xlabel("Iterations")
+plt.ylabel("Loss")
 plt.legend(loc="upper right")
 plt.show()

@@ -7,19 +7,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import os
-n = 2
-np.random.seed(n)
-torch.cuda.manual_seed_all(n)
-torch.manual_seed(n)
+# n = 2
+# np.random.seed(n)
+# torch.cuda.manual_seed_all(n)
+# torch.manual_seed(n)
 
 def weights_init(m):
     if type(m) == nn.Linear:
         nn.init.normal_(m.weight.data, mean=0.0, std=1e-3)
         m.bias.data.fill_(0.0)
         
-    if isinstance(m, nn.Conv2d):
-        nn.init.xavier_normal_(m.weight.data) 
-        m.bias.data.fill_(0.0)
+    # if isinstance(m, nn.Conv2d):
+    #     nn.init.xavier_normal_(m.weight.data) 
+    #     m.bias.data.fill_(0.0)
 
 def update_lr(optimizer, lr):
     for param_group in optimizer.param_groups:
@@ -37,9 +37,9 @@ print('Using device: %s'%device)
 input_size = 3
 num_classes = 10
 hidden_size = [128, 512, 512, 512, 512, 512]
-num_epochs = 20
+num_epochs = 1
 batch_size = 200
-learning_rate = 2e-3
+learning_rate = 0.01#2e-3
 learning_rate_decay = 0.95
 reg=0.001
 num_training= 49000
@@ -105,7 +105,7 @@ test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
 # Set norm_layer for different networks whether using batch normalization
 #-------------------------------------------------
 class ConvNet(nn.Module):
-    def __init__(self, input_size, hidden_layers, num_classes, p, norm_layer=None):
+    def __init__(self, input_size, hidden_layers, num_classes, dropout=None, norm_layer=None):
         super(ConvNet, self).__init__()
         #################################################################################
         # TODO: Initialize the modules required to implement the convolutional layer    #
@@ -117,45 +117,77 @@ class ConvNet(nn.Module):
         layers = []
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         
-        
-        self.conv = nn.Sequential(
-                    nn.Conv2d(in_channels=input_size, out_channels=hidden_layers[0], kernel_size=3, stride=1, padding=1),
-                    # nn.BatchNorm2d(hidden_layers[0]),
-                    nn.MaxPool2d(kernel_size=2, stride=2),
-                    nn.ReLU(),
-                    nn.Dropout2d(p),
-        
-                    nn.Conv2d(in_channels=hidden_layers[0], out_channels=hidden_layers[1], kernel_size=3, stride=1, padding=1),
-                    # nn.BatchNorm2d(hidden_layers[1]),
-                    nn.MaxPool2d(kernel_size=2, stride=2),
-                    nn.ReLU(),
-                    nn.Dropout2d(p),
-        
-                    nn.Conv2d(in_channels=hidden_layers[1], out_channels=hidden_layers[2], kernel_size=3, stride=1, padding=1),
-                    # nn.BatchNorm2d(hidden_layers[2]),
-                    nn.MaxPool2d(kernel_size=2, stride=2),
-                    nn.ReLU(),
-                    nn.Dropout2d(p),
-        
-                    nn.Conv2d(in_channels=hidden_layers[2], out_channels=hidden_layers[3], kernel_size=3, stride=1, padding=1),
-                    # nn.BatchNorm2d(hidden_layers[3]),
-                    nn.MaxPool2d(kernel_size=2, stride=2),
-                    nn.ReLU(),
-                    nn.Dropout2d(p),
-        
-                    nn.Conv2d(in_channels=hidden_layers[3], out_channels=hidden_layers[4], kernel_size=3, stride=1, padding=1),
-                    # nn.BatchNorm2d(hidden_layers[4]),
-                    nn.MaxPool2d(kernel_size=2, stride=2),
-                    nn.ReLU(),
-                    nn.Dropout2d(p)    )
-        
-        self.fc = nn.Sequential(
-                    nn.Linear(hidden_layers[4], hidden_layers[5]),
-                    # nn.BatchNorm1d(hidden_layers[5]),
-                    nn.ReLU(),
-        
-                    nn.Linear(hidden_layers[5], num_classes)
-                        )
+        if norm_layer == None:
+            #Q1.a
+            self.conv = nn.Sequential(
+                        nn.Conv2d(in_channels=input_size, out_channels=hidden_layers[0], kernel_size=3, stride=1, padding=1),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+
+                        nn.Conv2d(in_channels=hidden_layers[0], out_channels=hidden_layers[1], kernel_size=3, stride=1, padding=1),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+
+                        nn.Conv2d(in_channels=hidden_layers[1], out_channels=hidden_layers[2], kernel_size=3, stride=1, padding=1),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+
+                        nn.Conv2d(in_channels=hidden_layers[2], out_channels=hidden_layers[3], kernel_size=3, stride=1, padding=1),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+
+                        nn.Conv2d(in_channels=hidden_layers[3], out_channels=hidden_layers[4], kernel_size=3, stride=1, padding=1),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU()
+                                )
+
+            self.fc = nn.Sequential( 
+                        nn.Linear(hidden_layers[4], hidden_layers[5]),
+                        nn.ReLU(),
+
+                        nn.Linear(hidden_layers[5], num_classes)
+                            )
+
+        if dropout != None:
+            
+            self.conv = nn.Sequential(
+                        nn.Conv2d(in_channels=input_size, out_channels=hidden_layers[0], kernel_size=3, stride=1, padding=1),
+                        # nn.BatchNorm2d(hidden_layers[0]),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+                        nn.Dropout2d(dropout),
+            
+                        nn.Conv2d(in_channels=hidden_layers[0], out_channels=hidden_layers[1], kernel_size=3, stride=1, padding=1),
+                        # nn.BatchNorm2d(hidden_layers[1]),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+                        nn.Dropout2d(dropout),
+            
+                        nn.Conv2d(in_channels=hidden_layers[1], out_channels=hidden_layers[2], kernel_size=3, stride=1, padding=1),
+                        # nn.BatchNorm2d(hidden_layers[2]),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+                        nn.Dropout2d(dropout),
+            
+                        nn.Conv2d(in_channels=hidden_layers[2], out_channels=hidden_layers[3], kernel_size=3, stride=1, padding=1),
+                        # nn.BatchNorm2d(hidden_layers[3]),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+                        nn.Dropout2d(dropout),
+            
+                        nn.Conv2d(in_channels=hidden_layers[3], out_channels=hidden_layers[4], kernel_size=3, stride=1, padding=1),
+                        # nn.BatchNorm2d(hidden_layers[4]),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+                        nn.Dropout2d(dropout)    )
+            
+            self.fc = nn.Sequential(
+                        nn.Linear(hidden_layers[4], hidden_layers[5]),
+                        # nn.BatchNorm1d(hidden_layers[5]),
+                        nn.ReLU(),
+            
+                        nn.Linear(hidden_layers[5], num_classes)
+                            )
         
         layers = [self.conv, self.fc]
         self.layers = nn.Sequential(*layers)
@@ -188,8 +220,7 @@ def PrintModelSize(model, disp=True):
     #################################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     model_sz = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    print(model_sz)
-    
+
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return model_sz
 
@@ -245,16 +276,17 @@ def VisualizeFilter(model):
 #--------------------------------------------------------------------------------------
 pVals = [i/10 for i in range(1,10)]
 pVals = [0.1, 0.2]
+# pVals = [None]
 
 trainAcc = []
 valAcc = []
-for p in pVals:
+for dropout in pVals:
 
     print("######################################################################")
-    print("current value of p is:", p)
+    print("Current value of dropout is:", dropout)
     print("######################################################################")
 
-    model = ConvNet(input_size, hidden_size, num_classes, p, norm_layer=norm_layer).to(device)
+    model = ConvNet(input_size, hidden_size, num_classes, dropout, norm_layer=norm_layer).to(device)
     # Q2.a - Initialize the model with correct batch norm layer
 
     model.apply(weights_init)
@@ -361,9 +393,12 @@ for p in pVals:
     # Save the model checkpoint
     torch.save(model.state_dict(), 'model.ckpt')
 # print(trainAcc, valAcc)
-plt.plot(pVals, valAcc, label = "Test Acc")
-plt.plot(pVals, trainAcc, label = "Train Acc")
-plt.xlabel("Dropout Probability")
-plt.ylabel("Accuracy")
-plt.legend(loc="upper right")
-plt.show()
+
+if len(dropoutVals) >= 2:
+        
+    plt.plot(pVals, valAcc, label = "Test Acc")
+    plt.plot(pVals, trainAcc, label = "Train Acc")
+    plt.xlabel("Dropout Probability")
+    plt.ylabel("Accuracy")
+    plt.legend(loc="upper right")
+    plt.show()

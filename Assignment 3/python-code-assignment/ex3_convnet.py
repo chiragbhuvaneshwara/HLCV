@@ -3,10 +3,9 @@ import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
 import numpy as np
-
 import matplotlib.pyplot as plt
-
 import os
+
 n = 2
 np.random.seed(n)
 torch.cuda.manual_seed_all(n)
@@ -37,16 +36,31 @@ print('Using device: %s'%device)
 input_size = 3
 num_classes = 10
 hidden_size = [128, 512, 512, 512, 512, 512]
-num_epochs = 20
+num_epochs = 30
 batch_size = 200
 learning_rate = 2e-3
 learning_rate_decay = 0.95
 reg=0.001
 num_training= 49000
 num_validation =1000
-norm_layer = None
-print(hidden_size)
 
+# norm_layer = True
+norm_layer = None
+
+# dropoutVals = [i/10 for i in range(1,10)]
+# dropoutVals = [0.1, 0.2]
+dropoutVals = [None]
+
+early_stopping = False
+# early_stopping = True
+
+# visualize_filters = False
+visualize_filters = True
+
+# data_aug = True
+data_aug = False
+
+print(hidden_size)
 
 #-------------------------------------------------
 # Load the CIFAR-10 dataset
@@ -57,22 +71,23 @@ print(hidden_size)
 #################################################################################
 data_aug_transforms = []
 # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+if data_aug == True:
 
-# transformsList = [
-#     # transforms.RandomCrop(32, padding=4),
-#     transforms.RandomHorizontalFlip(),
-#     transforms.RandomRotation(15),
-#     transforms.RandomAffine(degrees=0, translate=(.3,.7)),
-#     # transforms.ColorJitter(
-#     #         brightness=float(0.1*np.random.rand(1)),
-#     #         contrast=float(0.1*np.random.rand(1)),
-#     #         saturation=float(0.1*np.random.rand(1)),
-#     #         hue=float(0.1*np.random.rand(1))),
-#     transforms.RandomGrayscale(p=0.1)   
-#                 ]
+    transformsList = [
+        # transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomRotation(15),
+        transforms.RandomAffine(degrees=0, translate=(.3,.7)),
+        # transforms.ColorJitter(
+        #         brightness=float(0.1*np.random.rand(1)),
+        #         contrast=float(0.1*np.random.rand(1)),
+        #         saturation=float(0.1*np.random.rand(1)),
+        #         hue=float(0.1*np.random.rand(1))),
+        transforms.RandomGrayscale(p=0.1)   
+                    ]
 
-# data_aug_transforms = transformsList
-# data_aug_transforms = transforms.RandomApply(transformsList, p=0.5)
+    data_aug_transforms = transformsList
+    data_aug_transforms = transforms.RandomApply(transformsList, p=0.5)
 # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 norm_transform = transforms.Compose(data_aug_transforms+[transforms.ToTensor(),
                                      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
@@ -120,7 +135,7 @@ test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
 # Set norm_layer for different networks whether using batch normalization
 #-------------------------------------------------
 class ConvNet(nn.Module):
-    def __init__(self, input_size, hidden_layers, num_classes, norm_layer=None):
+    def __init__(self, input_size, hidden_layers, num_classes, dropout= None, norm_layer=None):
         super(ConvNet, self).__init__()
         #################################################################################
         # TODO: Initialize the modules required to implement the convolutional layer    #
@@ -132,70 +147,159 @@ class ConvNet(nn.Module):
         layers = []
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         
-        # Q1.a
-        self.conv = nn.Sequential(
-                    nn.Conv2d(in_channels=input_size, out_channels=hidden_layers[0], kernel_size=3, stride=1, padding=1),
-                    nn.MaxPool2d(kernel_size=2, stride=2),
-                    nn.ReLU(),
+        #___________________________________________________________________________________________________________________________________
+        if norm_layer == None and dropout == None :
+            #Q1.a
+            self.conv = nn.Sequential(
+                        nn.Conv2d(in_channels=input_size, out_channels=hidden_layers[0], kernel_size=3, stride=1, padding=1),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
 
-                    nn.Conv2d(in_channels=hidden_layers[0], out_channels=hidden_layers[1], kernel_size=3, stride=1, padding=1),
-                    nn.MaxPool2d(kernel_size=2, stride=2),
-                    nn.ReLU(),
+                        nn.Conv2d(in_channels=hidden_layers[0], out_channels=hidden_layers[1], kernel_size=3, stride=1, padding=1),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
 
-                    nn.Conv2d(in_channels=hidden_layers[1], out_channels=hidden_layers[2], kernel_size=3, stride=1, padding=1),
-                    nn.MaxPool2d(kernel_size=2, stride=2),
-                    nn.ReLU(),
+                        nn.Conv2d(in_channels=hidden_layers[1], out_channels=hidden_layers[2], kernel_size=3, stride=1, padding=1),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
 
-                    nn.Conv2d(in_channels=hidden_layers[2], out_channels=hidden_layers[3], kernel_size=3, stride=1, padding=1),
-                    nn.MaxPool2d(kernel_size=2, stride=2),
-                    nn.ReLU(),
+                        nn.Conv2d(in_channels=hidden_layers[2], out_channels=hidden_layers[3], kernel_size=3, stride=1, padding=1),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
 
-                    nn.Conv2d(in_channels=hidden_layers[3], out_channels=hidden_layers[4], kernel_size=3, stride=1, padding=1),
-                    nn.MaxPool2d(kernel_size=2, stride=2),
-                    nn.ReLU()
+                        nn.Conv2d(in_channels=hidden_layers[3], out_channels=hidden_layers[4], kernel_size=3, stride=1, padding=1),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU()
+                                )
+
+            self.fc = nn.Sequential( 
+                        nn.Linear(hidden_layers[4], hidden_layers[5]),
+                        nn.ReLU(),
+
+                        nn.Linear(hidden_layers[5], num_classes)
                             )
 
-        self.fc = nn.Sequential( 
-                    nn.Linear(hidden_layers[4], hidden_layers[5]),
-                    nn.ReLU(),
+        #___________________________________________________________________________________________________________________________________
+        elif norm_layer == True and dropout == None:
+            #Q2.a
+            self.conv = nn.Sequential(
+                        nn.Conv2d(in_channels=input_size, out_channels=hidden_layers[0], kernel_size=3, stride=1, padding=1),
+                        nn.BatchNorm2d(hidden_layers[0]),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+            
+                        nn.Conv2d(in_channels=hidden_layers[0], out_channels=hidden_layers[1], kernel_size=3, stride=1, padding=1),
+                        nn.BatchNorm2d(hidden_layers[1]),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+            
+                        nn.Conv2d(in_channels=hidden_layers[1], out_channels=hidden_layers[2], kernel_size=3, stride=1, padding=1),
+                        nn.BatchNorm2d(hidden_layers[2]),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+            
+                        nn.Conv2d(in_channels=hidden_layers[2], out_channels=hidden_layers[3], kernel_size=3, stride=1, padding=1),
+                        nn.BatchNorm2d(hidden_layers[3]),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+            
+                        nn.Conv2d(in_channels=hidden_layers[3], out_channels=hidden_layers[4], kernel_size=3, stride=1, padding=1),
+                        nn.BatchNorm2d(hidden_layers[4]),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU()    )
+            
+            self.fc = nn.Sequential(
+                        nn.Linear(hidden_layers[4], hidden_layers[5]),
+                        nn.BatchNorm1d(hidden_layers[5]),
+                        nn.ReLU(),
+            
+                        nn.Linear(hidden_layers[5], num_classes)
+                            )
 
-                    nn.Linear(hidden_layers[5], num_classes)
-                        )
+        #___________________________________________________________________________________________________________________________________
+        elif norm_layer == None and dropout != None:
+            
+            self.conv = nn.Sequential(
+                        nn.Conv2d(in_channels=input_size, out_channels=hidden_layers[0], kernel_size=3, stride=1, padding=1),
+                        # nn.BatchNorm2d(hidden_layers[0]),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+                        nn.Dropout2d(dropout),
+            
+                        nn.Conv2d(in_channels=hidden_layers[0], out_channels=hidden_layers[1], kernel_size=3, stride=1, padding=1),
+                        # nn.BatchNorm2d(hidden_layers[1]),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+                        nn.Dropout2d(dropout),
+            
+                        nn.Conv2d(in_channels=hidden_layers[1], out_channels=hidden_layers[2], kernel_size=3, stride=1, padding=1),
+                        # nn.BatchNorm2d(hidden_layers[2]),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+                        nn.Dropout2d(dropout),
+            
+                        nn.Conv2d(in_channels=hidden_layers[2], out_channels=hidden_layers[3], kernel_size=3, stride=1, padding=1),
+                        # nn.BatchNorm2d(hidden_layers[3]),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+                        nn.Dropout2d(dropout),
+            
+                        nn.Conv2d(in_channels=hidden_layers[3], out_channels=hidden_layers[4], kernel_size=3, stride=1, padding=1),
+                        # nn.BatchNorm2d(hidden_layers[4]),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+                        nn.Dropout2d(dropout)    )
+            
+            self.fc = nn.Sequential(
+                        nn.Linear(hidden_layers[4], hidden_layers[5]),
+                        # nn.BatchNorm1d(hidden_layers[5]),
+                        nn.ReLU(),
+            
+                        nn.Linear(hidden_layers[5], num_classes)
+                            )
 
-        # Q2.a
-        # self.conv = nn.Sequential(
-        #             nn.Conv2d(in_channels=input_size, out_channels=hidden_layers[0], kernel_size=3, stride=1, padding=1),
-        #             nn.BatchNorm2d(hidden_layers[0]),
-        #             nn.MaxPool2d(kernel_size=2, stride=2),
-        #             nn.ReLU(),
-        
-        #             nn.Conv2d(in_channels=hidden_layers[0], out_channels=hidden_layers[1], kernel_size=3, stride=1, padding=1),
-        #             nn.BatchNorm2d(hidden_layers[1]),
-        #             nn.MaxPool2d(kernel_size=2, stride=2),
-        #             nn.ReLU(),
-        
-        #             nn.Conv2d(in_channels=hidden_layers[1], out_channels=hidden_layers[2], kernel_size=3, stride=1, padding=1),
-        #             nn.BatchNorm2d(hidden_layers[2]),
-        #             nn.MaxPool2d(kernel_size=2, stride=2),
-        #             nn.ReLU(),
-        
-        #             nn.Conv2d(in_channels=hidden_layers[2], out_channels=hidden_layers[3], kernel_size=3, stride=1, padding=1),
-        #             nn.BatchNorm2d(hidden_layers[3]),
-        #             nn.MaxPool2d(kernel_size=2, stride=2),
-        #             nn.ReLU(),
-        
-        #             nn.Conv2d(in_channels=hidden_layers[3], out_channels=hidden_layers[4], kernel_size=3, stride=1, padding=1),
-        #             nn.BatchNorm2d(hidden_layers[4]),
-        #             nn.MaxPool2d(kernel_size=2, stride=2),
-        #             nn.ReLU()    )
-        
-        # self.fc = nn.Sequential(
-        #             nn.Linear(hidden_layers[4], hidden_layers[5]),
-        #             nn.BatchNorm1d(hidden_layers[5]),
-        #             nn.ReLU(),
-        
-        #             nn.Linear(hidden_layers[5], num_classes)
-        #                 )
+        #___________________________________________________________________________________________________________________________________
+        elif norm_layer != None and dropout != None:
+            
+            self.conv = nn.Sequential(
+                        nn.Conv2d(in_channels=input_size, out_channels=hidden_layers[0], kernel_size=3, stride=1, padding=1),
+                        nn.BatchNorm2d(hidden_layers[0]),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+                        nn.Dropout2d(dropout),
+            
+                        nn.Conv2d(in_channels=hidden_layers[0], out_channels=hidden_layers[1], kernel_size=3, stride=1, padding=1),
+                        nn.BatchNorm2d(hidden_layers[1]),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+                        nn.Dropout2d(dropout),
+            
+                        nn.Conv2d(in_channels=hidden_layers[1], out_channels=hidden_layers[2], kernel_size=3, stride=1, padding=1),
+                        nn.BatchNorm2d(hidden_layers[2]),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+                        nn.Dropout2d(dropout),
+            
+                        nn.Conv2d(in_channels=hidden_layers[2], out_channels=hidden_layers[3], kernel_size=3, stride=1, padding=1),
+                        nn.BatchNorm2d(hidden_layers[3]),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+                        nn.Dropout2d(dropout),
+            
+                        nn.Conv2d(in_channels=hidden_layers[3], out_channels=hidden_layers[4], kernel_size=3, stride=1, padding=1),
+                        nn.BatchNorm2d(hidden_layers[4]),
+                        nn.MaxPool2d(kernel_size=2, stride=2),
+                        nn.ReLU(),
+                        nn.Dropout2d(dropout)    )
+            
+            self.fc = nn.Sequential(
+                        nn.Linear(hidden_layers[4], hidden_layers[5]),
+                        nn.BatchNorm1d(hidden_layers[5]),
+                        nn.ReLU(),
+            
+                        nn.Linear(hidden_layers[5], num_classes)
+                            )
+        #___________________________________________________________________________________________________________________________________
 
         layers = [self.conv, self.fc]
         self.layers = nn.Sequential(*layers)
@@ -228,7 +332,6 @@ def PrintModelSize(model, disp=True):
     #################################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     model_sz = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    print(model_sz)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return model_sz
@@ -281,110 +384,180 @@ def VisualizeFilter(model):
 # library.  Please complete the code for the ConvNet class evaluating the model
 #--------------------------------------------------------------------------------------
 
+losses = []
+testAcc = []
+trainAcc = []
+valAcc = []
+for dropout in dropoutVals :
 
-model = ConvNet(input_size, hidden_size, num_classes, norm_layer=norm_layer).to(device)
-# Q2.a - Initialize the model with correct batch norm layer
+    print("######################################################################")
+    print("Current value of dropout is:", dropout)
+    print("######################################################################")
 
-model.apply(weights_init)
-# Print the model
-print(model)
-# Print model size
-#======================================================================================
-# Q1.b: Implementing the function to count the number of trainable parameters in the model
-#======================================================================================
-PrintModelSize(model)
-#======================================================================================
-# Q1.a: Implementing the function to visualize the filters in the first conv layers.
-# Visualize the filters before training
-#======================================================================================
-VisualizeFilter(model)
+    model = ConvNet(input_size, hidden_size, num_classes, dropout, norm_layer=norm_layer).to(device)
+
+    # Q2.a - Initialize the model with correct batch norm layer
+
+    model.apply(weights_init)
+    # Print the model
+    print(model)
+    # Print model size
+    #======================================================================================
+    # Q1.b: Implementing the function to count the number of trainable parameters in the model
+    #======================================================================================
+    PrintModelSize(model)
+    #======================================================================================
+    # Q1.a: Implementing the function to visualize the filters in the first conv layers.
+    # Visualize the filters before training
+    #======================================================================================
+    if visualize_filters == True:
+        VisualizeFilter(model)
+
+    # Loss and optimizer
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=reg)
+
+    # Train the model
+    lr = learning_rate
+    total_step = len(train_loader)
 
 
-# Loss and optimizer
-criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=reg)
+    for epoch in range(num_epochs):
+        for i, (images, labels) in enumerate(train_loader):
+            # Move tensors to the configured device
+            images = images.to(device)
+            labels = labels.to(device)
 
-# Train the model
-lr = learning_rate
-total_step = len(train_loader)
+            # Forward pass
+            outputs = model(images)
 
+            loss = criterion(outputs, labels)
+            losses.append(loss)
 
-for epoch in range(num_epochs):
-    for i, (images, labels) in enumerate(train_loader):
-        # Move tensors to the configured device
-        images = images.to(device)
-        labels = labels.to(device)
+            # Backward and optimize
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
-        # Forward pass
-        outputs = model(images)
+            if (i+1) % 100 == 0:
+                print ('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'
+                    .format(epoch+1, num_epochs, i+1, total_step, loss.item()))
 
-        loss = criterion(outputs, labels)
+        # Code to update the lr
+        lr *= learning_rate_decay
+        update_lr(optimizer, lr)
+        model.eval()
+        with torch.no_grad():
+            correct = 0
+            total = 0
+            for images, labels in val_loader:
+                images = images.to(device)
+                labels = labels.to(device)
+                outputs = model(images)
+                _, predicted = torch.max(outputs.data, 1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
 
-        # Backward and optimize
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+            print('Validataion accuracy is: {} %'.format(100 * correct / total))
+            #################################################################################
+            # TODO: Q2.b Implement the early stopping mechanism to save the model which has #
+            # acheieved the best validation accuracy so-far.                                #
+            #################################################################################
+            best_model = None
+            # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        
+            current_valAcc = 100 * correct / total
+            valAcc.append(current_valAcc)
 
-        if (i+1) % 100 == 0:
-            print ('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'
-                .format(epoch+1, num_epochs, i+1, total_step, loss.item()))
+            if early_stopping == True:
+                if current_valAcc >= np.amax(valAcc):
+                    torch.save(model.state_dict(), os.path.join('models', 'model'+str(epoch+1)+'.ckpt'))
+            # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    # Code to update the lr
-    lr *= learning_rate_decay
-    update_lr(optimizer, lr)
+        model.train()
+
+    trainAcc.append(100 * correct / total)    
+        
+
+    # Test the model
+    # In test phase, we don't need to compute gradients (for memory efficiency)
     model.eval()
+    #################################################################################
+    # TODO: Q2.b Implement the early stopping mechanism to load the weights from the#
+    # best model so far and perform testing with this model.                        #
+    #################################################################################
+    # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    if early_stopping == True:
+        last_model = model
+        best_id = np.argmax(valAcc)
+        model = ConvNet(input_size, hidden_size, num_classes, norm_layer=norm_layer).to(device)
+        model.load_state_dict(torch.load(os.path.join('models','model'+str(best_id+1)+'.ckpt')))
+        model.eval()
+    # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     with torch.no_grad():
         correct = 0
         total = 0
-        for images, labels in val_loader:
+        for images, labels in test_loader:
             images = images.to(device)
             labels = labels.to(device)
             outputs = model(images)
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
+            if total == 1000:
+                break
 
-        print('Validataion accuracy is: {} %'.format(100 * correct / total))
-        #################################################################################
-        # TODO: Q2.b Implement the early stopping mechanism to save the model which has #
-        # acheieved the best validation accuracy so-far.                                #
-        #################################################################################
-        best_model = None
-        # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        print('Accuracy of the best network on the {} test images: {} %'.format(total, 100 * correct / total))
+        testAcc.append(100 * correct / total)
+        if early_stopping: 
+            print("Best Epoch: ", best_id)
 
-        # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    if early_stopping == True:
 
-    model.train()
+        with torch.no_grad():
+            correct = 0
+            total = 0
+            for images, labels in test_loader:
+                images = images.to(device)
+                labels = labels.to(device)
+                outputs = last_model(images)
+                _, predicted = torch.max(outputs.data, 1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
+                if total == 1000:
+                    break
+
+            print('Accuracy of the last network on the {} test images: {} %'.format(total, 100 * correct / total))
+
+    # Q1.c: Implementing the function to visualize the filters in the first conv layers.
+    # Visualize the filters before training
+    if visualize_filters == True:
+        VisualizeFilter(model)
+    # Save the model checkpoint
+    # torch.save(model.state_dict(), 'model.ckpt')
+
+
+
+    if early_stopping == True:
+            
+        plt.plot(valAcc, label = "Val Acc")
+        plt.xlabel("Epochs")
+        plt.ylabel("Validation Accuracy")
+        plt.legend(loc="upper right")
+        plt.show()
+
+        plt.plot(losses, label = "Loss")
+        plt.xlabel("Iterations")
+        plt.ylabel("Loss")
+        plt.legend(loc="upper right")
+        plt.show()
+
+
+if len(dropoutVals) >= 2:
     
-    
-
-# Test the model
-# In test phase, we don't need to compute gradients (for memory efficiency)
-model.eval()
-#################################################################################
-# TODO: Q2.b Implement the early stopping mechanism to load the weights from the#
-# best model so far and perform testing with this model.                        #
-#################################################################################
-# *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-# *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-with torch.no_grad():
-    correct = 0
-    total = 0
-    for images, labels in test_loader:
-        images = images.to(device)
-        labels = labels.to(device)
-        outputs = model(images)
-        _, predicted = torch.max(outputs.data, 1)
-        total += labels.size(0)
-        correct += (predicted == labels).sum().item()
-        if total == 1000:
-            break
-
-    print('Accuracy of the network on the {} test images: {} %'.format(total, 100 * correct / total))
-
-# Q1.c: Implementing the function to visualize the filters in the first conv layers.
-# Visualize the filters before training
-VisualizeFilter(model)
-# Save the model checkpoint
-torch.save(model.state_dict(), 'model.ckpt')
+    plt.plot(dropoutVals, testAcc, label = "Test Acc")
+    plt.plot(dropoutVals, trainAcc, label = "Train Acc")
+    plt.xlabel("Dropout Probability")
+    plt.ylabel("Accuracy")
+    plt.legend(loc="upper right")
+    plt.show()

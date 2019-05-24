@@ -44,21 +44,60 @@ reg=0.001
 num_training= 49000
 num_validation =1000
 
-# norm_layer = True
+#####################################################
+############   Parameters to be set:   ##############
+#####################################################
+
+####### Q1] a,b,c parameters:
 norm_layer = None
-
-# dropoutVals = [i/10 for i in range(1,10)]
-# dropoutVals = [0.1, 0.2]
 dropoutVals = [None]
-
 early_stopping = False
-# early_stopping = True
-
-# visualize_filters = False
 visualize_filters = True
-
-# data_aug = True
 data_aug = False
+
+####### Q2] a) parameters:
+# norm_layer = True
+# dropoutVals = [None]
+# early_stopping = False
+# visualize_filters = True
+# data_aug = False
+
+####### Q2] b) parameters:
+# norm_layer = True
+# dropoutVals = [None]
+# early_stopping = False
+# visualize_filters = True
+# data_aug = False
+
+####### Q3] a) parameters:
+# norm_layer = None
+# dropoutVals = [None]
+# early_stopping = False
+# visualize_filters = False
+# data_aug = True
+
+####### Q3] b) parameters:
+# norm_layer = None
+# dropoutVals = [i/10 for i in range(1,10)]
+# early_stopping = False
+# visualize_filters = False
+# data_aug = True
+
+
+
+
+########## Old code
+# # norm_layer = True
+# norm_layer = None
+# # dropoutVals = [i/10 for i in range(1,10)]
+# # dropoutVals = [0.1, 0.2]
+# dropoutVals = [None]
+# early_stopping = False
+# # early_stopping = True
+# # visualize_filters = False
+# visualize_filters = True
+# # data_aug = True
+# data_aug = False
 
 print(hidden_size)
 
@@ -88,7 +127,7 @@ if data_aug == True:
 
     data_aug_transforms = transformsList
     
-    # data_aug_transforms = transforms.RandomApply(transformsList, p=0.5)
+    
 
 # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 norm_transform = transforms.Compose(data_aug_transforms+[transforms.ToTensor(),
@@ -334,7 +373,7 @@ def PrintModelSize(model, disp=True):
     #################################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     model_sz = sum(p.numel() for p in model.parameters() if p.requires_grad)
-
+    print("Number of trainable parameters = ",model_sz)
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     return model_sz
 

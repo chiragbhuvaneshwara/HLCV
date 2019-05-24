@@ -49,11 +49,11 @@ num_validation =1000
 #####################################################
 
 ####### Q1] a,b,c parameters:
-norm_layer = None
-dropoutVals = [None]
-early_stopping = False
-visualize_filters = True
-data_aug = False
+# norm_layer = None
+# dropoutVals = [None]
+# early_stopping = False
+# visualize_filters = True
+# data_aug = False
 
 ####### Q2] a) parameters:
 # norm_layer = True
@@ -65,8 +65,8 @@ data_aug = False
 ####### Q2] b) parameters:
 # norm_layer = True
 # dropoutVals = [None]
-# early_stopping = False
-# visualize_filters = True
+# early_stopping = True
+# visualize_filters = False
 # data_aug = False
 
 ####### Q3] a) parameters:
@@ -512,7 +512,7 @@ for dropout in dropoutVals :
 
             if early_stopping == True:
                 if current_valAcc >= np.amax(valAcc):
-                    torch.save(model.state_dict(), os.path.join('models', 'model'+str(epoch+1)+'.ckpt'))
+                    torch.save(model.state_dict(), 'model'+str(epoch+1)+'.ckpt')
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
         model.train()
@@ -532,7 +532,7 @@ for dropout in dropoutVals :
         last_model = model
         best_id = np.argmax(valAcc)
         model = ConvNet(input_size, hidden_size, num_classes, norm_layer=norm_layer).to(device)
-        model.load_state_dict(torch.load(os.path.join('models','model'+str(best_id+1)+'.ckpt')))
+        model.load_state_dict(torch.load('model'+str(best_id+1)+'.ckpt'))
         model.eval()
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     with torch.no_grad():
@@ -579,7 +579,7 @@ for dropout in dropoutVals :
 
 
 
-    if early_stopping == True:
+    if dropout == None:
             
         plt.plot(valAcc, label = "Val Acc")
         plt.xlabel("Epochs")

@@ -215,12 +215,12 @@ for epoch in range(num_epochs):
         #################################################################################
         best_model = None
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        if not fine_tune:               #get best_model only if we are training or fine-tuning the entire model
+        #if not fine_tune:               #get best_model only if we are training or fine-tuning the entire model
 
-            current_valAcc = 100 * correct / total
-            valAcc.append(current_valAcc)
-            if current_valAcc >= np.amax(valAcc):
-                torch.save(model.state_dict(), os.path.join('models', 'model'+str(epoch+1)+'.ckpt'))
+        current_valAcc = 100 * correct / total
+        valAcc.append(current_valAcc)
+        if current_valAcc >= np.amax(valAcc):
+            torch.save(model.state_dict(),'model'+str(epoch+1)+'.ckpt')
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -231,12 +231,12 @@ for epoch in range(num_epochs):
 # weights from the best model so far and perform testing with this model.       #
 #################################################################################
 # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-if not fine_tune:
-    last_model = model
-    best_id = np.argmax(valAcc)
-    model = VggModel(num_classes, fine_tune, pretrained).to(device)
-    model.load_state_dict(torch.load(os.path.join('models','model'+str(best_id+1)+'.ckpt')))
-    model.eval()
+# if not fine_tune:
+last_model = model
+best_id = np.argmax(valAcc)
+model = VggModel(num_classes, fine_tune, pretrained).to(device)
+model.load_state_dict(torch.load('model'+str(best_id+1)+'.ckpt'))
+model.eval()
 # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
 # Test the model

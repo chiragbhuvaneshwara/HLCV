@@ -87,7 +87,9 @@ if data_aug == True:
                     ]
 
     data_aug_transforms = transformsList
-    data_aug_transforms = transforms.RandomApply(transformsList, p=0.5)
+    
+    # data_aug_transforms = transforms.RandomApply(transformsList, p=0.5)
+
 # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 norm_transform = transforms.Compose(data_aug_transforms+[transforms.ToTensor(),
                                      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))

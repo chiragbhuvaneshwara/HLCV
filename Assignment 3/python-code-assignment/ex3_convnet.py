@@ -49,11 +49,11 @@ num_validation =1000
 #####################################################
 
 ####### Q1] a,b,c parameters:
-# norm_layer = None
-# dropoutVals = [None]
-# early_stopping = False
-# visualize_filters = True
-# data_aug = False
+norm_layer = None
+dropoutVals = [None]
+early_stopping = False
+visualize_filters = True
+data_aug = False
 
 ####### Q2] a) parameters:
 # norm_layer = True
